@@ -1,13 +1,22 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { getCurrentUser, loadUserFromStorage, login as authLogin, logout as authLogout, Roles, subscribeAuth } from './authService';
+import { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  getCurrentUser,
+  loadUserFromStorage,
+  login as authLogin,
+  logout as authLogout,
+  Roles,
+  subscribeAuth,
+} from "./authService";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [initializing, setInitializing] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     // Load once on mount
@@ -30,6 +39,12 @@ export function AuthProvider({ children }) {
   const handleLogout = async () => {
     await authLogout();
     setUser(null);
+    // After logout, navigate to login page
+    try {
+      router.replace("/login");
+    } catch {
+      // ignore routing errors in non-browser contexts
+    }
   };
 
   return (
@@ -52,9 +67,7 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return ctx;
 }
-
-

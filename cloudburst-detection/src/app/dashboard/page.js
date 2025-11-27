@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import { ref, onValue } from 'firebase/database';
-import dynamic from 'next/dynamic';
-import { database } from '@/lib/firebase';
-import NodeStatusBadge from '@/components/NodeStatusBadge';
-import ProtectedPage from '@/features/auth/ProtectedPage';
-import { Roles } from '@/features/auth/authService';
+import { useState, useEffect, useMemo } from "react";
+import { ref, onValue } from "firebase/database";
+import dynamic from "next/dynamic";
+import { database } from "@/lib/firebase";
+import NodeStatusBadge from "@/components/NodeStatusBadge";
+import ProtectedPage from "@/features/auth/ProtectedPage";
+import { Roles } from "@/features/auth/authService";
 import {
   AlertCircle,
   ArrowUpRight,
@@ -18,10 +18,10 @@ import {
   Activity,
   Signal,
   ChevronRight,
-} from 'lucide-react';
-import classNames from '@/utils/classNames';
+} from "lucide-react";
+import classNames from "@/utils/classNames";
 
-const DashboardMap = dynamic(() => import('@/components/DashboardMap'), {
+const DashboardMap = dynamic(() => import("@/components/DashboardMap"), {
   ssr: false,
   loading: () => (
     <div className="flex h-64 items-center justify-center bg-gray-800">
@@ -34,24 +34,24 @@ const DashboardMap = dynamic(() => import('@/components/DashboardMap'), {
 });
 
 function getNodeStatus(node) {
-  if (!node?.realtime || !node.realtime.lastUpdate) return 'offline';
+  if (!node?.realtime || !node.realtime.lastUpdate) return "offline";
 
-  if (node.realtime.status === 'offline') return 'offline';
+  if (node.realtime.status === "offline") return "offline";
   const lastUpdateMs =
-    typeof node.realtime.lastUpdate === 'string'
+    typeof node.realtime.lastUpdate === "string"
       ? parseInt(node.realtime.lastUpdate, 10) * 1000
       : node.realtime.lastUpdate;
 
   const now = Date.now();
   const diff = now - lastUpdateMs;
 
-  if (diff < 5 * 60 * 1000) return 'online';
-  if (diff < 15 * 60 * 1000) return 'warning';
-  return 'offline';
+  if (diff < 5 * 60 * 1000) return "online";
+  if (diff < 15 * 60 * 1000) return "warning";
+  return "offline";
 }
 
 function formatTimeAgo(timestamp) {
-  if (!timestamp) return 'Never';
+  if (!timestamp) return "Never";
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
   if (seconds < 60) return `${seconds}s ago`;
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
@@ -67,7 +67,7 @@ export default function DashboardPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const nodesRef = ref(database, 'nodes');
+    const nodesRef = ref(database, "nodes");
     const unsubscribe = onValue(
       nodesRef,
       (snapshot) => {
@@ -87,7 +87,12 @@ export default function DashboardPage() {
             ) {
               return;
             }
-            if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+            if (
+              latitude < -90 ||
+              latitude > 90 ||
+              longitude < -180 ||
+              longitude > 180
+            ) {
               return;
             }
             valid.push({ id: nodeId, ...node });
@@ -97,7 +102,7 @@ export default function DashboardPage() {
           setError(null);
         } catch (err) {
           console.error(err);
-          setError('Failed to process node data');
+          setError("Failed to process node data");
         } finally {
           setLoading(false);
         }
@@ -113,7 +118,7 @@ export default function DashboardPage() {
   }, []);
 
   const activeNodes = useMemo(
-    () => nodes.filter((n) => getNodeStatus(n) === 'online'),
+    () => nodes.filter((n) => getNodeStatus(n) === "online"),
     [nodes]
   );
 
@@ -128,7 +133,9 @@ export default function DashboardPage() {
         totalDataPoints += Object.keys(node.history).length;
       }
       if (node.alerts) {
-        activeAlerts += Object.values(node.alerts).filter((a) => !a.acknowledged).length;
+        activeAlerts += Object.values(node.alerts).filter(
+          (a) => !a.acknowledged
+        ).length;
       }
     });
 
@@ -161,7 +168,9 @@ export default function DashboardPage() {
           <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-gray-100">
             Error loading dashboard
           </h2>
-          <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">{error}</p>
+          <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
+            {error}
+          </p>
           <button
             type="button"
             onClick={() => window.location.reload()}
@@ -183,8 +192,8 @@ export default function DashboardPage() {
             No Nodes Registered
           </h2>
           <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
-            Register your first sensor node to start monitoring weather conditions and detecting
-            cloudbursts.
+            Register your first sensor node to start monitoring weather
+            conditions and detecting cloudbursts.
           </p>
           <a
             href="/register"
@@ -206,9 +215,9 @@ export default function DashboardPage() {
           <div className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-white/10 text-white">
             <MapPinned className="h-4 w-4" />
           </div>
-           <div>
-             <h3 className="text-sm font-semibold text-white">Live Flood Map</h3>
-             <p className="text-xs text-sky-100/80">Live view of active nodes</p>
+          <div>
+            <h3 className="text-sm font-semibold text-white">Live Flood Map</h3>
+            <p className="text-xs text-sky-100/80">Live view of active nodes</p>
           </div>
         </div>
 
@@ -235,7 +244,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="absolute bottom-4 left-4 rounded-md bg-white/10 px-3 py-1 text-xs text-white">
-        {nodes.length} node{nodes.length === 1 ? '' : 's'} • {activeNodes.length} online
+        {nodes.length} node{nodes.length === 1 ? "" : "s"} •{" "}
+        {activeNodes.length} online
       </div>
     </div>
   );
@@ -243,36 +253,47 @@ export default function DashboardPage() {
   const NodesPanel = (
     <div className="flex h-[420px] flex-col overflow-hidden rounded-2xl bg-white p-0 shadow-lg ring-1 ring-black/5 dark:bg-gray-800/60 dark:ring-black/10">
       <div className="px-5 py-4 border-b border-gray-200 dark:border-white/6">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Active Sensors</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">Live overview of sensor status</p>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          Active Sensors
+        </h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Live overview of sensor status
+        </p>
       </div>
 
       <ul className="flex-1 divide-y divide-gray-200 overflow-y-auto p-4 dark:divide-white/6">
         {activeNodes.map((node) => {
           const lastUpdateMs =
-            typeof node.realtime.lastUpdate === 'string'
+            typeof node.realtime.lastUpdate === "string"
               ? parseInt(node.realtime.lastUpdate, 10) * 1000
               : node.realtime.lastUpdate;
-          const isSelected = selectedNode?.metadata?.nodeId === node.metadata.nodeId;
+          const isSelected =
+            selectedNode?.metadata?.nodeId === node.metadata.nodeId;
           return (
             <li key={node.metadata.nodeId} className="py-2">
               <button
                 type="button"
                 onClick={() => setSelectedNode(node)}
                 className={classNames(
-                  'flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left hover:bg-white/3',
-                  isSelected ? 'bg-white/5' : ''
+                  "flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left hover:bg-white/3",
+                  isSelected ? "bg-white/5" : ""
                 )}
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                     {node.metadata.name}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{formatTimeAgo(lastUpdateMs)}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {formatTimeAgo(lastUpdateMs)}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <NodeStatusBadge status={getNodeStatus(node)} showDot showText={false} />
+                  <NodeStatusBadge
+                    status={getNodeStatus(node)}
+                    showDot
+                    showText={false}
+                  />
                   <ChevronRight className="h-4 w-4 text-gray-400" />
                 </div>
               </button>
@@ -286,8 +307,12 @@ export default function DashboardPage() {
   const SensorsPanel = (
     <div className="flex h-[320px] flex-col overflow-hidden rounded-2xl bg-white p-0 shadow-lg ring-1 ring-black/5 dark:bg-gray-800/60 dark:ring-black/10">
       <div className="px-5 py-4 border-b border-gray-200 dark:border-white/6">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Prediction Panel</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">AI + manual insights</p>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          Prediction Panel
+        </h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          AI + manual insights
+        </p>
       </div>
 
       <div className="p-4 grid gap-3 md:grid-cols-2">
@@ -326,14 +351,24 @@ export default function DashboardPage() {
     >
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Network Stats</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Updated every 5 minutes</p>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            Network Stats
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Updated every 5 minutes
+          </p>
         </div>
-        <Activity className="h-5 w-5 text-blue-500 dark:text-blue-400" aria-hidden="true" />
+        <Activity
+          className="h-5 w-5 text-blue-500 dark:text-blue-400"
+          aria-hidden="true"
+        />
       </div>
 
       <div className="grid flex-1 grid-cols-2 gap-4">
-        <MetricCard label="Uptime" value={`${(Math.random() * (99 - 96) + 96).toFixed(1)}%`} />
+        <MetricCard
+          label="Uptime"
+          value={`${(Math.random() * (99 - 96) + 96).toFixed(1)}%`}
+        />
         <MetricCard label="Predicted events" value={3} />
         <MetricCard label="Total Nodes" value={metrics.totalNodes} />
         <MetricCard label="Active Alerts" value={metrics.activeAlerts} />
@@ -344,11 +379,13 @@ export default function DashboardPage() {
   /* ---------- Render ---------- */
 
   return (
-    <ProtectedPage allowedRoles={[Roles.ADMIN]}>
+    <ProtectedPage allowedRoles={[Roles.ADMIN, Roles.USER]}>
       <div className="pt-4 pb-6">
         <header className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              Dashboard
+            </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Real-time view of active sensor nodes and network status.
             </p>
@@ -379,7 +416,9 @@ export default function DashboardPage() {
                   <div className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-blue-600/10 text-blue-700 dark:bg-white/10 dark:text-white">
                     <MapPinned className="h-4 w-4" />
                   </div>
-                  <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Map – Fullscreen</h2>
+                  <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    Map – Fullscreen
+                  </h2>
                 </div>
                 <button
                   type="button"
@@ -415,25 +454,29 @@ function MetricCard({ label, value }) {
       className="flex flex-col justify-between rounded-lg bg-gray-100 p-4 text-left dark:bg-gray-900/40"
       tabIndex={0}
     >
-      <p className="text-xs font-medium text-gray-700 dark:text-gray-400">{label}</p>
+      <p className="text-xs font-medium text-gray-700 dark:text-gray-400">
+        {label}
+      </p>
       <div className="mt-2 flex items-baseline justify-between">
-        <p className="text-2xl font-semibold text-gray-900 dark:text-white">{value}</p>
+        <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+          {value}
+        </p>
         <span className="text-xs text-green-600 dark:text-green-400">+2%</span>
       </div>
     </div>
   );
 }
 
-function SmallInfoCard({ color = 'blue', title, text, Icon }) {
-  const base = 'rounded-lg p-3';
+function SmallInfoCard({ color = "blue", title, text, Icon }) {
+  const base = "rounded-lg p-3";
   const bg =
-    color === 'red'
-      ? 'bg-red-50 text-red-800 dark:bg-red-700/10 dark:text-red-200'
-      : color === 'cyan'
-      ? 'bg-cyan-50 text-cyan-800 dark:bg-cyan-700/10 dark:text-cyan-200'
-      : color === 'green'
-      ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-700/10 dark:text-emerald-200'
-      : 'bg-sky-50 text-sky-800 dark:bg-sky-700/10 dark:text-sky-200';
+    color === "red"
+      ? "bg-red-50 text-red-800 dark:bg-red-700/10 dark:text-red-200"
+      : color === "cyan"
+      ? "bg-cyan-50 text-cyan-800 dark:bg-cyan-700/10 dark:text-cyan-200"
+      : color === "green"
+      ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-700/10 dark:text-emerald-200"
+      : "bg-sky-50 text-sky-800 dark:bg-sky-700/10 dark:text-sky-200";
 
   return (
     <div className={`${base} ${bg} flex flex-col justify-between`}>
@@ -441,7 +484,9 @@ function SmallInfoCard({ color = 'blue', title, text, Icon }) {
         <div className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-white/70 text-gray-900 dark:bg-white/5 dark:text-white">
           <Icon className="h-4 w-4" />
         </div>
-        <p className="text-sm font-medium text-gray-900 dark:text-white">{title}</p>
+        <p className="text-sm font-medium text-gray-900 dark:text-white">
+          {title}
+        </p>
       </div>
       <p className="mt-2 text-xs text-gray-700 dark:text-white/80">{text}</p>
     </div>
