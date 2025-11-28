@@ -25,6 +25,7 @@ import {
   TrendingUp,
   LogOut,
   Menu,
+  Home,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { Roles } from "@/features/auth/authService";
@@ -35,7 +36,7 @@ const NAV_ITEMS = [
   {
     href: "/",
     label: "Home",
-    icon: LayoutDashboard,
+    icon: Home,
     roles: [Roles.ADMIN, Roles.NODE_REGISTRAR, Roles.USER],
   },
   {
@@ -118,12 +119,14 @@ export default function Sidebar({
           onClick={() => setCollapsed((c) => !c)}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold">
-            CB
-          </span>
+          <img
+            src="/favicon.ico"
+            alt="Cloudburst logo"
+            className="h-8 w-8 rounded-md"
+          />
           {!collapsed && (
             <span className="font-semibold text-gray-900 dark:text-white">
-              Cloudburst
+              Cloudburst Sentinel
             </span>
           )}
         </button>

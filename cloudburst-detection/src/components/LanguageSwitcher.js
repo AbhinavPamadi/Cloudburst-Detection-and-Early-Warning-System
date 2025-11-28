@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useLocale } from 'next-intl';
-import { locales, localeNames } from '@/i18n/config';
-import { Languages } from 'lucide-react';
+import { useState } from "react";
+import { useLocale } from "next-intl";
+import { locales, localeNames } from "@/i18n/config";
+import { Languages } from "lucide-react";
 
 export default function LanguageSwitcher() {
   const currentLocale = useLocale();
@@ -18,7 +18,7 @@ export default function LanguageSwitcher() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-200 hover:bg-gray-700 transition-colors"
         aria-label="Change language"
       >
         <Languages className="h-5 w-5" />
@@ -41,8 +41,8 @@ export default function LanguageSwitcher() {
                 }}
                 className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
                   currentLocale === locale
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-medium'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-medium"
+                    : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
                 {localeNames[locale]}

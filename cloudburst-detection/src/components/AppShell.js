@@ -1,5 +1,5 @@
 // src/components/AppShell.jsx
-'use client';
+"use client";
 
 /**
  * AppShell
@@ -8,21 +8,25 @@
  * - Keeps login/auth routes full-width (no sidebar).
  */
 
-import React, { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { Menu, LogOut } from 'lucide-react';
-import Sidebar from './Sidebar';
-import classNames from '@/utils/classNames';
-import { useAuth } from '@/features/auth/AuthContext';
-import ThemeToggle from '@/components/ThemeToggle';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Menu, LogOut } from "lucide-react";
+import Sidebar from "./Sidebar";
+import classNames from "@/utils/classNames";
+import { useAuth } from "@/features/auth/AuthContext";
+import ThemeToggle from "@/components/ThemeToggle";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function AppShell({ children }) {
   const pathname = usePathname();
   const { user, role, logout } = useAuth();
 
   // Auth route(s) that should render full-width without the sidebar
-  const isAuthRoute = pathname === '/login' || pathname.startsWith('/auth');
+  const isAuthRoute =
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname.startsWith("/auth");
 
   // Sidebar state (lifted here so layout can apply matching margins)
   const [collapsed, setCollapsed] = useState(false);
@@ -31,15 +35,15 @@ export default function AppShell({ children }) {
   // Lock body scroll when mobile drawer is open
   useEffect(() => {
     if (mobileOpen) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
     } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
     }
     return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
     };
   }, [mobileOpen]);
 
@@ -48,11 +52,34 @@ export default function AppShell({ children }) {
 
   if (isAuthRoute) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-          {children}
-        </div>
-      </main>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        {/* Minimal navbar for auth pages */}
+        <header className="sticky top-0 z-30 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur px-4 sm:px-6">
+          <div className="mx-auto w-full max-w-7xl flex h-16 items-center justify-between">
+            {/* Project name */}
+            <Link href="/" className="flex items-center gap-2">
+              <img
+                src="/favicon.ico"
+                alt="Cloudburst logo"
+                className="h-8 w-8 rounded-md"
+              />
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
+                Cloudburst Sentinel
+              </span>
+            </Link>
+            {/* Theme toggle and language switcher */}
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <LanguageSwitcher />
+            </div>
+          </div>
+        </header>
+        <main className="pt-4 pb-8">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </main>
+      </div>
     );
   }
 
@@ -69,8 +96,17 @@ export default function AppShell({ children }) {
           >
             <Menu className="h-5 w-5" />
           </button>
+          <Link href="/" className="flex items-center">
+            <img
+              src="/favicon.ico"
+              alt="Cloudburst logo"
+              className="h-8 w-8 rounded-md mr-3"
+            />
+          </Link>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-gray-100">Cloudburst Sentinel</span>
+            <span className="text-sm font-semibold text-gray-100">
+              Cloudburst Detection System
+            </span>
             {role && (
               <span className="text-[11px] uppercase tracking-wide text-gray-400">
                 {role.toLowerCase()}
@@ -86,7 +122,7 @@ export default function AppShell({ children }) {
               <div className="hidden sm:flex items-center gap-2 text-sm text-gray-200">
                 <span className="max-w-[160px] truncate">{user.email}</span>
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold">
-                  {user.email?.[0]?.toUpperCase() || 'U'}
+                  {user.email?.[0]?.toUpperCase() || "U"}
                 </div>
               </div>
               <button
@@ -105,8 +141,8 @@ export default function AppShell({ children }) {
       {/* Sidebar drawer overlay (for all breakpoints) */}
       <div
         className={classNames(
-          'fixed inset-y-0 left-0 z-40 w-64 transform bg-gray-900 shadow-xl transition-transform duration-300',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          "fixed inset-y-0 left-0 z-40 w-64 transform bg-gray-900 shadow-xl transition-transform duration-300",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
         aria-hidden={!mobileOpen}
       >
@@ -119,8 +155,10 @@ export default function AppShell({ children }) {
       </div>
       <div
         className={classNames(
-          'fixed inset-0 z-30 bg-black/40 transition-opacity duration-300',
-          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          "fixed inset-0 z-30 bg-black/40 transition-opacity duration-300",
+          mobileOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         )}
         onClick={() => setMobileOpen(false)}
         aria-hidden={!mobileOpen}

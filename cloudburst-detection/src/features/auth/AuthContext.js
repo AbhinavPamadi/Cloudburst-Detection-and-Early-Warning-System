@@ -1,73 +1,171 @@
+// src/features/auth/AuthContext.jsx
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+// Ensure Firebase app is initialized before using auth/firestore APIs
+import "@/lib/firebase";
+
+import React, { createContext, useContext, useEffect, useState } from "react";
 import {
-  getCurrentUser,
-  loadUserFromStorage,
-  login as authLogin,
-  logout as authLogout,
-  Roles,
-  subscribeAuth,
-} from "./authService";
+  getAuth,
+  onAuthStateChanged,
+  signOut as firebaseSignOut,
+} from "firebase/auth";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 const AuthContext = createContext(null);
 
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [initializing, setInitializing] = useState(true);
-  const router = useRouter();
+  const [user, setUser] = useState(null); // minimal user { uid, email, displayName, role }
+  const [role, setRole] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load once on mount
-    const loaded = loadUserFromStorage() || getCurrentUser();
-    if (loaded) {
-      setUser(loaded);
-    }
-    setInitializing(false);
+    const auth = getAuth();
 
-    const unsubscribe = subscribeAuth(setUser);
-    return unsubscribe;
+    // If a previous flow saved a `currentUser` to localStorage (e.g. hardcoded
+    // login that doesn't use Firebase Auth), restore it so the app doesn't
+    // immediately redirect to /login while Firebase initializes.
+    if (typeof window !== "undefined") {
+      try {
+        const stored = window.localStorage.getItem("currentUser");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.uid) {
+            console.debug(
+              "AuthContext: restored user from localStorage",
+              parsed
+            );
+            setUser(parsed);
+            setRole(parsed.role || null);
+            setIsAuthenticated(true);
+            setLoading(false);
+          }
+        }
+      } catch (e) {
+        console.warn("AuthContext: failed to parse stored user", e);
+      }
+    }
+
+    console.debug("AuthContext: subscribing to onAuthStateChanged");
+
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      console.debug("AuthContext.onAuthStateChanged fired", {
+        uid: fbUser?.uid,
+        email: fbUser?.email,
+      });
+      setLoading(true);
+      if (!fbUser) {
+        console.debug("AuthContext: user is signed out");
+        setUser(null);
+        setRole(null);
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch Firestore user doc to get role + other metadata
+      try {
+        const db = getFirestore();
+        const docRef = doc(db, "users", fbUser.uid);
+        const snap = await getDoc(docRef);
+
+        if (snap.exists()) {
+          const data = snap.data();
+          const normalized = {
+            uid: data.uid || fbUser.uid,
+            email: data.email || fbUser.email,
+            displayName: data.displayName || fbUser.displayName || "",
+            photoURL: data.photoURL || fbUser.photoURL || "",
+            role: data.role || "USER",
+          };
+          setUser(normalized);
+          setRole(normalized.role);
+          setIsAuthenticated(true);
+          // persist to localStorage if you want
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(
+              "currentUser",
+              JSON.stringify(normalized)
+            );
+          }
+        } else {
+          // if no user doc exists (edge case), create one with default USER role
+          const userDoc = {
+            uid: fbUser.uid,
+            email: fbUser.email,
+            displayName: fbUser.displayName || "",
+            photoURL: fbUser.photoURL || "",
+            role: "USER",
+            createdAt: serverTimestamp(),
+            lastSeenAt: serverTimestamp(),
+          };
+          await setDoc(doc(db, "users", fbUser.uid), userDoc);
+          setUser({
+            uid: fbUser.uid,
+            email: fbUser.email,
+            displayName: fbUser.displayName || "",
+            photoURL: fbUser.photoURL || "",
+            role: "USER",
+          });
+          setRole("USER");
+          setIsAuthenticated(true);
+        }
+      } catch (err) {
+        console.error("AuthContext: failed to fetch user doc", err);
+        setUser({ uid: fbUser.uid, email: fbUser.email });
+        setRole(null);
+        setIsAuthenticated(true);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const handleLogin = async (credentials) => {
-    const loggedIn = await authLogin(credentials);
-    setUser(loggedIn);
-    return loggedIn;
+  const saveUserToStorage = (u) => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("currentUser", JSON.stringify(u));
+    }
   };
 
-  const handleLogout = async () => {
-    await authLogout();
-    setUser(null);
-    // After logout, navigate to login page
-    try {
-      router.replace("/login");
-    } catch {
-      // ignore routing errors in non-browser contexts
+  const logout = async () => {
+    const auth = getAuth();
+    await firebaseSignOut(auth);
+    // clear local storage
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("currentUser");
     }
+    setUser(null);
+    setRole(null);
+    setIsAuthenticated(false);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        role: user?.role ?? null,
-        isAuthenticated: !!user,
-        initializing,
-        Roles,
-        login: handleLogin,
-        logout: handleLogout,
+        role,
+        isAuthenticated,
+        loading,
+        // some files expect `initializing` name — provide alias to avoid racey redirects
+        initializing: loading,
+        saveUserToStorage,
+        logout,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
-  return ctx;
 }

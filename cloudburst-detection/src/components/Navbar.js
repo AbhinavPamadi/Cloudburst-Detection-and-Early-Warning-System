@@ -1,42 +1,51 @@
 // src/components/Navbar.js
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import { Menu, X, AlertCircle } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import ThemeToggle from './ThemeToggle';
-import LanguageSwitcher from './LanguageSwitcher';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Menu, X, AlertCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useAuth } from "@/features/auth/AuthContext";
+import ThemeToggle from "./ThemeToggle";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const t = useTranslations('nav');
+  const t = useTranslations("nav");
+  const { user } = useAuth();
 
   const navLinks = [
-    { href: '/', label: t('home') },
-    { href: '/dashboard', label: t('dashboard') },
-    { href: '/prediction', label: t('prediction') },
-    { href: '/register', label: t('register') },
-    { href: '/contacts', label: t('contacts') },
-    { href: '/alerts', label: t('alerts') },
-    { href: '/graphs', label: t('graphs') },
-    { href: '/settings', label: t('settings') },
-    { href: '/admin', label: t('admin') },
-    { href: '/about', label: t('about') },
+    { href: "/", label: t("home") },
+    { href: "/dashboard", label: t("dashboard") },
+    { href: "/prediction", label: t("prediction") },
+    { href: "/register", label: t("register") },
+    { href: "/contacts", label: t("contacts") },
+    { href: "/alerts", label: t("alerts") },
+    { href: "/graphs", label: t("graphs") },
+    { href: "/settings", label: t("settings") },
+    { href: "/admin", label: t("admin") },
+    { href: "/about", label: t("about") },
   ];
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-md sticky top-0 z-50 transition-colors" suppressHydrationWarning={true}>
+    <nav
+      className="bg-white dark:bg-gray-900 shadow-md sticky top-0 z-50 transition-colors"
+      suppressHydrationWarning={true}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <AlertCircle className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              <img
+                src="/favicon.ico"
+                alt="Cloudburst logo"
+                className="h-8 w-8 rounded-md"
+              />
               <span className="font-bold text-xl text-gray-900 dark:text-white">
-                {t('logoText')}
+                {t("logoText")}
               </span>
             </Link>
           </div>
@@ -49,15 +58,22 @@ export default function Navbar() {
                 href={link.href}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   pathname === link.href
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200"
+                    : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
-                suppressHydrationWarning={link.href === '/admin'}
+                suppressHydrationWarning={link.href === "/admin"}
               >
                 {link.label}
               </Link>
             ))}
             <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-gray-300 dark:border-gray-700">
+              {user?.photoURL && (
+                <img
+                  src={user.photoURL}
+                  alt={user?.displayName || user?.email}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              )}
               <ThemeToggle />
               <LanguageSwitcher />
             </div>
@@ -92,10 +108,10 @@ export default function Navbar() {
                 onClick={() => setIsOpen(false)}
                 className={`block px-3 py-2 rounded-md text-base font-medium ${
                   pathname === link.href
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200"
+                    : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
-                suppressHydrationWarning={link.href === '/admin'}
+                suppressHydrationWarning={link.href === "/admin"}
               >
                 {link.label}
               </Link>

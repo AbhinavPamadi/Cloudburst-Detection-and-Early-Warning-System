@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSession } from "next-auth/react";
-import { login as localLogin, Roles } from "@/features/auth/authService";
+import { getOrCreateOAuthUser } from "@/features/auth/authService";
+import { useAuth } from "@/features/auth/AuthContext";
 
 export default function OAuthCallback() {
   const router = useRouter();
+  const { saveUserToStorage } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -14,20 +16,22 @@ export default function OAuthCallback() {
     async function init() {
       try {
         const session = await getSession();
-        if (!session || !session.user?.email) {
-          throw new Error("No session found");
+        if (!session || !session.user || !session.user.email) {
+          throw new Error("No session found from provider");
         }
 
-        // Create a local app user based on Google session
-        await localLogin({
+        const user = await getOrCreateOAuthUser({
           email: session.user.email,
-          password: "google-oauth",
-          role: Roles.USER,
+          displayName: session.user.name || "",
         });
 
-        // Redirect to home page after OAuth login
+        // persist locally
+        saveUserToStorage(user);
+
+        // navigate home
         router.replace("/");
       } catch (err) {
+        console.error("OAuth callback error", err);
         setError(err?.message || "OAuth callback failed");
       } finally {
         setLoading(false);
@@ -35,7 +39,7 @@ export default function OAuthCallback() {
     }
 
     init();
-  }, [router]);
+  }, [router, saveUserToStorage]);
 
   if (loading)
     return (

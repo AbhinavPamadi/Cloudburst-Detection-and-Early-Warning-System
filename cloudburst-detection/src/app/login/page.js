@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, Lock, Mail, User } from "lucide-react";
-import { signIn } from "next-auth/react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { Roles } from "@/features/auth/authService";
+import {
+  login as doLogin,
+  getOrCreateOAuthUser,
+} from "@/features/auth/authService";
+import { auth, GoogleAuthProvider, signInWithPopup } from "@/lib/firebase";
 
 function GoogleIcon({ className = "h-4 w-4" }) {
   return (
@@ -39,11 +42,9 @@ function GoogleIcon({ className = "h-4 w-4" }) {
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useAuth();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState(Roles.USER);
+  const { saveUserToStorage } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,18 +55,10 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      // Hardcoded credentials for Admin and Node Registrar
-      let chosenRole = Roles.USER;
-      if (email === "admin@gmail.com" && password === "123456") {
-        chosenRole = Roles.ADMIN;
-      } else if (email === "node@gmail.com" && password === "123456") {
-        chosenRole = Roles.NODE_REGISTRAR;
-      } else {
-        // Regular users: any email/password allowed
-        chosenRole = Roles.USER;
-      }
-
-      const user = await login({ email, password, role: chosenRole });
+      // Use authService login which handles hardcoded admin/node and Firebase auth users
+      const user = await doLogin({ email, password });
+      // persist locally
+      saveUserToStorage(user);
       // After login, all roles land on the home page
       if (redirect) {
         router.replace(redirect);
@@ -120,7 +113,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-field pl-9"
+                className="input-field pl-9 text-gray-700 dark:text-gray-200 "
                 placeholder="Username"
                 autoComplete="email"
               />
@@ -138,8 +131,8 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-field pl-9"
-                placeholder="Password "
+                className="input-field pl-9 text-gray-700 dark:text-gray-200"
+                placeholder="***********"
                 autoComplete="current-password"
               />
             </div>
@@ -150,9 +143,27 @@ export default function LoginPage() {
           <div className="flex items-center justify-center gap-3">
             <button
               type="button"
-              onClick={() =>
-                signIn("google", { callbackUrl: "/auth/oauth-callback" })
-              }
+              onClick={async () => {
+                setLoading(true);
+                setError("");
+                try {
+                  const provider = new GoogleAuthProvider();
+                  const result = await signInWithPopup(auth, provider);
+                  const fbUser = result.user;
+                  const user = await getOrCreateOAuthUser({
+                    email: fbUser.email,
+                    displayName: fbUser.displayName || "",
+                    photoURL: fbUser.photoURL || "",
+                  });
+                  saveUserToStorage(user);
+                  router.replace("/");
+                } catch (err) {
+                  console.error("Google sign-in failed", err);
+                  setError(err?.message || "Google sign-in failed");
+                } finally {
+                  setLoading(false);
+                }
+              }}
               className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200"
             >
               <GoogleIcon className="h-4 w-4" />
@@ -169,7 +180,17 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div />
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Don't have an account?{" "}
+            <a
+              href="/signup"
+              className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Sign up
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
