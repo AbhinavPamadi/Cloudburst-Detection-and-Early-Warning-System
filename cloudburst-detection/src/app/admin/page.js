@@ -830,60 +830,6 @@ export default function AnalyticalPanel() {
               <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Last 100 messages</p>
             </div>
           </div>
-
-          {/* Node Health Table */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Node Health Overview</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Node ID</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Type</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Last Data</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {Object.entries(nodes).slice(0, 5).map(([nodeId, node]) => {
-                    const status = getNodeStatus(node.realtime?.lastUpdate);
-                    const lastUpdateTime = node.realtime?.lastUpdate 
-                      ? (typeof node.realtime.lastUpdate === 'string' 
-                          ? parseInt(node.realtime.lastUpdate) * 1000 
-                          : node.realtime.lastUpdate)
-                      : null;
-                    return (
-                      <tr key={nodeId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                          {node.metadata?.name || nodeId}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            status === 'online' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                          }`}>
-                            <span className={`w-2 h-2 rounded-full mr-1 ${
-                              status === 'online' ? 'bg-green-500' : 'bg-red-500'
-                            }`}></span>
-                            {status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            node.metadata?.type === 'gateway' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
-                          }`}>
-                            {node.metadata?.type || 'Node'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                          {formatTimeAgo(lastUpdateTime)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </section>
 
         {/* Node Management */}
