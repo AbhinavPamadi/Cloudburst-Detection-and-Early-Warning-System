@@ -26,6 +26,7 @@ import {
   LogOut,
   Menu,
   Home,
+  CloudRain,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { Roles } from "@/features/auth/authService";
@@ -56,6 +57,12 @@ const NAV_ITEMS = [
     label: "Alerts",
     icon: Bell,
     roles: [Roles.ADMIN, Roles.USER],
+  },
+  {
+    href: "/cloudburst-occurrences",
+    label: "Cloudburst Occurrences",
+    icon: CloudRain,
+    roles: [Roles.ADMIN, Roles.NODE_REGISTRAR, Roles.USER],
   },
   {
     href: "/prediction",
