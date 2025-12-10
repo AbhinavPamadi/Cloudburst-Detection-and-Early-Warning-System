@@ -26,7 +26,7 @@ export default function ProtectedPage({
 
     if (!isAuthenticated) {
       const search = pathname ? `?redirect=${encodeURIComponent(pathname)}` : '';
-      router.replace(`/login${search}`);
+      router.replace(`/${search}`);
       return;
     }
 
@@ -42,7 +42,7 @@ export default function ProtectedPage({
       } else if (role === 'NODE_REGISTRAR') {
         router.replace('/register');
       } else {
-        router.replace('/');
+        router.replace('/home');
       }
     }
   }, [allowedRoles, fallbackRoute, initializing, isAuthenticated, pathname, role, router]);
@@ -64,6 +64,8 @@ export default function ProtectedPage({
 
   return children;
 }
+
+
 
 
 

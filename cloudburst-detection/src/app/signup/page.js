@@ -85,7 +85,7 @@ export default function SignupPage() {
 
       // Redirect to home page after successful signup
       setTimeout(() => {
-        router.replace("/");
+        router.replace("/home");
       }, 1500);
     } catch (err) {
       setError(err.message || "Signup failed");
@@ -213,7 +213,7 @@ export default function SignupPage() {
                   photoURL: fbUser.photoURL || "",
                 });
                 saveUserToStorage(user);
-                router.replace("/");
+                router.replace("/home");
               } catch (err) {
                 console.error("Google signup failed", err);
                 setError(err?.message || "Google signup failed");

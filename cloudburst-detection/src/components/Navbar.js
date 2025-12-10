@@ -17,7 +17,7 @@ export default function Navbar() {
   const { user } = useAuth();
 
   const navLinks = [
-    { href: "/", label: t("home") },
+    { href: "/home", label: t("home") },
     { href: "/dashboard", label: t("dashboard") },
     { href: "/prediction", label: t("prediction") },
     { href: "/register", label: t("register") },
@@ -38,7 +38,7 @@ export default function Navbar() {
         <div className="flex justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/home" className="flex items-center space-x-2">
               <img
                 src="/favicon.ico"
                 alt="Cloudburst logo"

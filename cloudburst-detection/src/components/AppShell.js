@@ -24,6 +24,7 @@ export default function AppShell({ children }) {
 
   // Auth route(s) that should render full-width without the sidebar
   const isAuthRoute =
+    pathname === "/" ||
     pathname === "/login" ||
     pathname === "/signup" ||
     pathname.startsWith("/auth");
@@ -57,7 +58,7 @@ export default function AppShell({ children }) {
         <header className="sticky top-0 z-30 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur px-4 sm:px-6">
           <div className="mx-auto w-full max-w-7xl flex h-16 items-center justify-between">
             {/* Project name */}
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/home" className="flex items-center gap-2">
               <img
                 src="/favicon.ico"
                 alt="Cloudburst logo"
@@ -96,7 +97,7 @@ export default function AppShell({ children }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Link href="/" className="flex items-center">
+          <Link href="/home" className="flex items-center">
             <img
               src="/favicon.ico"
               alt="Cloudburst logo"

@@ -29,7 +29,7 @@ export default function OAuthCallback() {
         saveUserToStorage(user);
 
         // navigate home
-        router.replace("/");
+        router.replace("/home");
       } catch (err) {
         console.error("OAuth callback error", err);
         setError(err?.message || "OAuth callback failed");

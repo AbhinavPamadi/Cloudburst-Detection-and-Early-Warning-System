@@ -1,282 +1,196 @@
-// src/app/page.js
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AlertCircle, Lock, Mail, User } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { database, ref, onValue } from "@/lib/firebase";
-import { Activity, AlertTriangle, Cloud, MapPin } from "lucide-react";
-import { useTranslations } from "next-intl";
+import {
+  login as doLogin,
+  getOrCreateOAuthUser,
+} from "@/features/auth/authService";
+import { auth, GoogleAuthProvider, signInWithPopup } from "@/lib/firebase";
 
-export default function Home() {
-  const t = useTranslations("home");
+function GoogleIcon({ className = "h-4 w-4" }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M21.35 11.1H12v2.8h5.35c-.23 1.38-1.24 2.55-2.65 3.23v2.68h4.28C20.95 18.3 22 15.95 22 13c0-.7-.07-1.38-.2-2.05z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 22c2.7 0 4.97-.9 6.63-2.45l-4.28-2.68c-1.19.8-2.72 1.28-4.35 1.28-3.34 0-6.17-2.25-7.18-5.28H.98v2.86C2.65 19.9 7.9 22 12 22z"
+        fill="#34A853"
+      />
+      <path
+        d="M4.82 13.87A7.998 7.998 0 0 1 4.5 12c0-.62.08-1.22.22-1.8V7.34H.98A11.99 11.99 0 0 0 0 12c0 1.92.44 3.73 1.22 5.33l3.6-3.46z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 6.5c1.47 0 2.8.5 3.84 1.48l2.88-2.88C16.95 2.9 14.7 2 12 2 7.9 2 2.65 4.1.98 7.34l3.74 2.86C5.83 8.75 8.66 6.5 12 6.5z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
+
+export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, initializing } = useAuth();
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { saveUserToStorage } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // If auth state is known and user is not authenticated, send to login.
-  useEffect(() => {
-    if (initializing) return;
-    if (!isAuthenticated) {
-      router.replace("/login");
+  const redirect = searchParams?.get("redirect") || "";
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      // Use authService login which handles hardcoded admin/node and Firebase auth users
+      const user = await doLogin({ email, password });
+      // persist locally
+      saveUserToStorage(user);
+      // After login, redirect to home page or specified redirect
+      if (redirect) {
+        router.replace(redirect);
+      } else {
+        router.replace("/home");
+      }
+    } catch (err) {
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
-  }, [initializing, isAuthenticated, router]);
-  const [stats, setStats] = useState({
-    totalNodes: 0,
-    activeNodes: 0,
-    totalDataPoints: 0,
-    activeAlerts: 0,
-  });
-
-  const [recentAlerts, setRecentAlerts] = useState([]);
-  const [lastUpdateTime, setLastUpdateTime] = useState("");
-  const [nodes, setNodes] = useState({});
-
-  // Format large numbers
-  const formatNumber = (num) => {
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + "M";
-    } else if (num >= 1000) {
-      return (num / 1000).toFixed(1) + "K";
-    }
-    return num.toString();
   };
-
-  // Helper function to determine node status
-  const getNodeStatus = (lastUpdate) => {
-    if (!lastUpdate) return "offline";
-
-    const lastUpdateTime =
-      typeof lastUpdate === "string" ? parseInt(lastUpdate) * 1000 : lastUpdate;
-
-    const now = Date.now();
-    const timeDiff = now - lastUpdateTime;
-
-    // Online if updated within last 5 minutes
-    if (timeDiff < 5 * 60 * 1000) return "online";
-    // Warning if updated within last 15 minutes
-    if (timeDiff < 15 * 60 * 1000) return "warning";
-    // Otherwise offline
-    return "offline";
-  };
-
-  useEffect(() => {
-    // Set initial time on client side
-    setLastUpdateTime(new Date().toLocaleTimeString());
-
-    // Update time every second
-    const timeInterval = setInterval(() => {
-      setLastUpdateTime(new Date().toLocaleTimeString());
-    }, 1000);
-
-    // Listen to nodes data
-    const nodesRef = ref(database, "nodes");
-    const unsubscribeNodes = onValue(nodesRef, (snapshot) => {
-      const nodesData = snapshot.val() || {};
-      setNodes(nodesData);
-
-      // Calculate stats from real data
-      const totalNodes = Object.keys(nodesData).length;
-      const activeNodes = Object.values(nodesData).filter(
-        (node) => getNodeStatus(node.realtime?.lastUpdate) === "online"
-      ).length;
-
-      // Count total data points from history
-      let totalDataPoints = 0;
-      Object.values(nodesData).forEach((node) => {
-        if (node.history) {
-          totalDataPoints += Object.keys(node.history).length;
-        }
-      });
-
-      setStats((prev) => ({
-        ...prev,
-        totalNodes,
-        activeNodes,
-        totalDataPoints,
-      }));
-    });
-
-    // Listen to alerts
-    const alertsRef = ref(database, "alerts");
-    const unsubscribeAlerts = onValue(alertsRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      const alertsArray = Object.values(data);
-
-      // Count active (unacknowledged) alerts
-      const activeAlerts = alertsArray.filter(
-        (alert) => !alert.acknowledged
-      ).length;
-
-      // Get recent unacknowledged alerts
-      const recentAlertsArray = alertsArray
-        .filter((alert) => !alert.acknowledged)
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 3);
-
-      setRecentAlerts(recentAlertsArray);
-      setStats((prev) => ({
-        ...prev,
-        activeAlerts,
-      }));
-    });
-
-    return () => {
-      clearInterval(timeInterval);
-      unsubscribeNodes();
-      unsubscribeAlerts();
-    };
-  }, []);
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="text-center">
-          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            {t("title")}
+    <div className="flex min-h-screen items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md rounded-2xl bg-white/90 dark:bg-gray-900/90 shadow-xl border border-gray-200/80 dark:border-gray-800/80 p-6 sm:p-8">
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white">
+            <User className="h-6 w-6" aria-hidden="true" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Sign in to Cloudburst
           </h1>
-          <p className="text-xl text-gray-700 dark:text-gray-300 mb-8">
-            {t("subtitle")}
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            Sign in with Google or use email + password.
           </p>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-12">
-            {t("description")}
-          </p>
-
-          <div className="flex justify-center gap-4">
-            <Link
-              href="/dashboard"
-              className="bg-blue-600 dark:bg-blue-500 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
-            >
-              {t("viewDashboard")}
-            </Link>
-            <Link
-              href="/about"
-              className="bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-2 border-blue-600 dark:border-blue-400"
-            >
-              {t("learnMore")}
-            </Link>
-          </div>
         </div>
 
-        {/* Live Statistics */}
-        <div className="mt-20">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {t("liveStats")}
-            </h2>
-            <Link
-              href="/data-analytics"
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1"
-            >
-              {t("viewAnalytical")} →
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <Cloud className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {stats.totalNodes}
-                  </span>
-                </div>
-              </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                {t("totalNodes")}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {t("totalNodesDesc")}
-              </p>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <Activity className="h-8 w-8 text-green-600 dark:text-green-400" />
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {stats.activeNodes}
-                  </span>
-                </div>
-              </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                {t("activeSensors")}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {t("activeSensorsDesc")}
-              </p>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <MapPin className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                  <span
-                    className="text-3xl font-bold text-gray-900 dark:text-white"
-                    title={stats.totalDataPoints.toLocaleString()}
-                  >
-                    {formatNumber(stats.totalDataPoints)}
-                  </span>
-                </div>
-              </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                {t("dataPoints")}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {t("dataPointsDesc")}
-              </p>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
-                <div className="flex items-center gap-2">
-                  {stats.activeAlerts > 0 && (
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  )}
-                  <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {stats.activeAlerts}
-                  </span>
-                </div>
-              </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                {t("activeAlerts")}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {t("activeAlertsDesc")}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Alerts Ticker */}
-        {recentAlerts.length > 0 && (
-          <div className="mt-12 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-400 p-4 rounded-lg">
-            <h3 className="font-semibold text-red-800 dark:text-red-300 mb-2 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              {t("recentAlerts")}
-            </h3>
-            <div className="space-y-2">
-              {recentAlerts.map((alert, index) => (
-                <div
-                  key={index}
-                  className="text-red-700 dark:text-red-300 text-sm"
-                >
-                  {alert.message}
-                </div>
-              ))}
-            </div>
-            <Link
-              href="/alerts"
-              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium text-sm mt-2 inline-block"
-            >
-              {t("viewAllAlerts")} →
-            </Link>
+        {error && (
+          <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+            <AlertCircle
+              className="mt-0.5 h-4 w-4 flex-shrink-0"
+              aria-hidden="true"
+            />
+            <span>{error}</span>
           </div>
         )}
+
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+          aria-label="Login form"
+        >
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Email
+            </label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-field pl-9 text-gray-700 dark:text-gray-200 "
+                placeholder="Username"
+                autoComplete="email"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-field pl-9 text-gray-700 dark:text-gray-200"
+                placeholder="***********"
+                autoComplete="current-password"
+              />
+            </div>
+          </div>
+
+          {/* Removed role selector — roles determined by credentials */}
+
+          <div className="flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                setLoading(true);
+                setError("");
+                try {
+                  const provider = new GoogleAuthProvider();
+                  const result = await signInWithPopup(auth, provider);
+                  const fbUser = result.user;
+                  const user = await getOrCreateOAuthUser({
+                    email: fbUser.email,
+                    displayName: fbUser.displayName || "",
+                    photoURL: fbUser.photoURL || "",
+                  });
+                  saveUserToStorage(user);
+                  router.replace("/home");
+                } catch (err) {
+                  console.error("Google sign-in failed", err);
+                  setError(err?.message || "Google sign-in failed");
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200"
+            >
+              <GoogleIcon className="h-4 w-4" />
+              Sign in with Google
+            </button>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
+          >
+            {loading ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Don&apos;t have an account?{" "}
+            <a
+              href="/signup"
+              className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Sign up
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -59,11 +59,11 @@ export default function LoginPage() {
       const user = await doLogin({ email, password });
       // persist locally
       saveUserToStorage(user);
-      // After login, all roles land on the home page
+      // After login, redirect to home page or specified redirect
       if (redirect) {
         router.replace(redirect);
       } else {
-        router.replace("/");
+        router.replace("/home");
       }
     } catch (err) {
       setError(err.message || "Login failed");
@@ -156,7 +156,7 @@ export default function LoginPage() {
                     photoURL: fbUser.photoURL || "",
                   });
                   saveUserToStorage(user);
-                  router.replace("/");
+                  router.replace("/home");
                 } catch (err) {
                   console.error("Google sign-in failed", err);
                   setError(err?.message || "Google sign-in failed");
@@ -195,4 +195,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
 
