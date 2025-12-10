@@ -1,0 +1,258 @@
+/* ============================================
+   Map Sector Styles
+   ============================================ */
+
+/* Sector Polygons */
+.sector-polygon {
+  transition: fill-opacity 0.2s ease, stroke-width 0.2s ease;
+}
+
+.sector-polygon:hover {
+  fill-opacity: 0.6;
+  stroke-width: 3;
+}
+
+.sector-polygon--selected {
+  fill-opacity: 0.7;
+  stroke-width: 3;
+}
+
+.sector-polygon--critical {
+  animation: sectorPulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   Sector Tooltip
+   ============================================ */
+
+.sector-tooltip-container {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.sector-tooltip-container .leaflet-tooltip-content {
+  margin: 0;
+}
+
+.sector-tooltip {
+  background: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: inherit;
+  min-width: 120px;
+}
+
+.dark .sector-tooltip {
+  background: #1f2937;
+  border-color: #374151;
+  color: white;
+}
+
+.sector-tooltip .font-semibold {
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.dark .sector-tooltip .font-semibold {
+  color: white;
+}
+
+.sector-tooltip .text-sm {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.dark .sector-tooltip .text-sm {
+  color: #9ca3af;
+}
+
+.sector-tooltip .font-medium {
+  font-weight: 500;
+}
+
+.sector-tooltip .text-xs {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+/* ============================================
+   Wind Indicators
+   ============================================ */
+
+.wind-indicator {
+  transition: transform 0.3s ease;
+}
+
+.wind-indicator--active {
+  animation: windArrowPulse 2s ease-in-out infinite;
+}
+
+.wind-arrow {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.wind-arrow path {
+  fill: #0ea5e9;
+  stroke: white;
+  stroke-width: 1;
+}
+
+/* ============================================
+   Aerial Markers
+   ============================================ */
+
+.aerial-marker {
+  z-index: 1000 !important;
+}
+
+.aerial-marker--deploying {
+  animation: aerialBounce 1s ease-in-out infinite;
+}
+
+.aerial-marker--descending {
+  animation: aerialDescend 1s ease-in-out infinite;
+}
+
+.aerial-balloon {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+/* ============================================
+   Legend
+   ============================================ */
+
+.sector-legend {
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark .sector-legend {
+  background: #1f2937;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.legend-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.dark .legend-label {
+  color: #9ca3af;
+}
+
+/* ============================================
+   Probability Colors (CSS Variables)
+   ============================================ */
+
+:root {
+  --probability-green: #22c55e;
+  --probability-yellow: #eab308;
+  --probability-orange: #f97316;
+  --probability-red: #ef4444;
+}
+
+.probability-low {
+  background-color: var(--probability-green);
+}
+
+.probability-elevated {
+  background-color: var(--probability-yellow);
+}
+
+.probability-high {
+  background-color: var(--probability-orange);
+}
+
+.probability-critical {
+  background-color: var(--probability-red);
+}
+
+/* ============================================
+   Map Controls
+   ============================================ */
+
+.leaflet-control-container {
+  font-family: inherit;
+}
+
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.leaflet-control-zoom a {
+  background: white !important;
+  color: #374151 !important;
+  border: none !important;
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  font-size: 18px !important;
+}
+
+.dark .leaflet-control-zoom a {
+  background: #1f2937 !important;
+  color: #9ca3af !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: #f3f4f6 !important;
+}
+
+.dark .leaflet-control-zoom a:hover {
+  background: #374151 !important;
+}
+
+.leaflet-control-zoom-in {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.leaflet-control-zoom-out {
+  border-radius: 0 0 8px 8px !important;
+}
+
+/* ============================================
+   Propagation Ripple
+   ============================================ */
+
+.propagation-ripple {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--probability-orange);
+  animation: ripple 1.5s ease-out forwards;
+  pointer-events: none;
+}
+
+/* ============================================
+   Screen Flash
+   ============================================ */
+
+.screen-flash {
+  position: fixed;
+  inset: 0;
+  background: var(--probability-red);
+  opacity: 0;
+  animation: flash 200ms ease-in-out;
+  pointer-events: none;
+  z-index: 9999;
+}
