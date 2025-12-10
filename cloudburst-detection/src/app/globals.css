@@ -3,6 +3,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Sector map styles */
+@import '../styles/map-sectors.css';
+@import '../styles/animations.css';
+
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900;
