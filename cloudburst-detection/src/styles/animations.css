@@ -1,0 +1,458 @@
+/* ============================================
+   Cloudburst Detection Animations
+   ============================================ */
+
+/* ============================================
+   Sector Pulse Animation
+   For critical/high alert sectors
+   ============================================ */
+
+@keyframes sectorPulse {
+  0%, 100% {
+    stroke-opacity: 0.8;
+    stroke-width: 2px;
+  }
+  50% {
+    stroke-opacity: 1;
+    stroke-width: 4px;
+  }
+}
+
+@keyframes sectorPulseYellow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(234, 179, 8, 0);
+  }
+}
+
+@keyframes sectorPulseRed {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+/* ============================================
+   Wind Arrow Pulse Animation
+   For wind indicators during cloudburst
+   ============================================ */
+
+@keyframes windArrowPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes windArrowFlow {
+  0% {
+    stroke-dashoffset: 20;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ============================================
+   Ripple Animation
+   For propagation visualization
+   ============================================ */
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes rippleMultiple {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   Screen Flash Animation
+   For cloudburst detection alert
+   ============================================ */
+
+@keyframes flash {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.3;
+  }
+  60% {
+    opacity: 0.1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes flashIntense {
+  0%, 100% {
+    opacity: 0;
+  }
+  10%, 30%, 50% {
+    opacity: 0.4;
+  }
+  20%, 40% {
+    opacity: 0.1;
+  }
+}
+
+/* ============================================
+   Aerial Marker Animations
+   ============================================ */
+
+@keyframes aerialBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ============================================
+   Node Marker Animations
+   ============================================ */
+
+@keyframes nodePulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes nodeOnlinePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
+}
+
+/* ============================================
+   Cloud Marker Animations
+   ============================================ */
+
+@keyframes cloudFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes cloudMove {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(var(--cloud-dx, 0), var(--cloud-dy, 0));
+  }
+}
+
+@keyframes aerialDescend {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+@keyframes aerialRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   Alert Badge Animations
+   ============================================ */
+
+@keyframes alertBadgePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes alertDot {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* ============================================
+   Progress Bar Animation
+   ============================================ */
+
+@keyframes progressShrink {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+
+/* ============================================
+   Slide Animations
+   ============================================ */
+
+@keyframes slideInRight {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slideInUp {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutDown {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   Fade Animations
+   ============================================ */
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   Loading Animations
+   ============================================ */
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+.animate-sector-pulse {
+  animation: sectorPulse 1.5s ease-in-out infinite;
+}
+
+.animate-sector-pulse-yellow {
+  animation: sectorPulseYellow 2s ease-in-out infinite;
+}
+
+.animate-sector-pulse-red {
+  animation: sectorPulseRed 1.5s ease-in-out infinite;
+}
+
+.animate-wind-pulse {
+  animation: windArrowPulse 2s ease-in-out infinite;
+}
+
+.animate-wind-flow {
+  animation: windArrowFlow 1s linear infinite;
+  stroke-dasharray: 10 10;
+}
+
+.animate-ripple {
+  animation: ripple 1.5s ease-out forwards;
+}
+
+.animate-flash {
+  animation: flash 200ms ease-in-out forwards;
+}
+
+.animate-flash-intense {
+  animation: flashIntense 500ms ease-in-out forwards;
+}
+
+.animate-aerial-bounce {
+  animation: aerialBounce 1s ease-in-out infinite;
+}
+
+.animate-aerial-descend {
+  animation: aerialDescend 1s ease-in-out infinite;
+}
+
+.animate-alert-pulse {
+  animation: alertBadgePulse 1s ease-in-out infinite;
+}
+
+.animate-alert-dot {
+  animation: alertDot 1s ease-in-out infinite;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+.animate-slide-out-right {
+  animation: slideOutRight 0.3s ease-out forwards;
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.3s ease-out forwards;
+}
+
+.animate-slide-out-down {
+  animation: slideOutDown 0.3s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.2s ease-out forwards;
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 0.2s ease-out forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ============================================
+   Reduced Motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
