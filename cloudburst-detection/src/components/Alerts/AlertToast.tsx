@@ -12,7 +12,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import type { Alert, SectorState } from '@/types/sector.types';
-import { getProbabilityColor, getAlertLevelName } from '@/utils/colorScale';
+import { getProbabilityColor } from '@/utils/colorScale';
 
 // ============================================
 // Types
@@ -114,15 +114,15 @@ export function AlertToast({
 
   // Play sound on mount for critical alerts
   useEffect(() => {
-    if (alert.severity === 'critical' || alert.severity === 'high') {
+    if (alert.severity === 'critical') {
       playSound();
     }
   }, [alert.severity, playSound]);
 
   const handleDismiss = useCallback(() => {
     setIsExiting(true);
-    setTimeout(() => onDismiss(alert.id), 300);
-  }, [alert.id, onDismiss]);
+    setTimeout(() => onDismiss(alert.alertId), 300);
+  }, [alert.alertId, onDismiss]);
 
   const probability = sector?.currentProbability ?? 0;
   const alertColor = getProbabilityColor(probability);
@@ -170,7 +170,7 @@ export function AlertToast({
                   : 'Cloudburst Alert'}
               </h4>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {getAlertLevelName(alert.severity)} severity
+                {alert.severity.charAt(0).toUpperCase() + alert.severity.slice(1)} severity
               </p>
             </div>
           </div>
@@ -267,7 +267,7 @@ export function AlertToastContainer({
   // Only show unacknowledged alerts, most recent first
   const visibleAlerts = alerts
     .filter((a) => !a.acknowledged)
-    .sort((a, b) => b.timestamp - a.timestamp)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     .slice(0, maxVisible);
 
   const hiddenCount = alerts.filter((a) => !a.acknowledged).length - maxVisible;
@@ -293,7 +293,7 @@ export function AlertToastContainer({
       {/* Alerts */}
       {visibleAlerts.map((alert) => (
         <AlertToast
-          key={alert.id}
+          key={alert.alertId}
           alert={alert}
           sector={sectors.get(alert.sectorId)}
           onDismiss={onDismiss}

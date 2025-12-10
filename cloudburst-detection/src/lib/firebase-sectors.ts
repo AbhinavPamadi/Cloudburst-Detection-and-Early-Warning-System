@@ -50,8 +50,10 @@ import type {
   AerialUnit,
   Alert,
   AlertLevel,
+  AlertSeverity,
+  AerialStatus,
   Coordinates,
-  SectorNode,
+  SensorNode,
 } from '@/types/sector.types';
 
 // ============================================
@@ -109,13 +111,55 @@ interface FirebaseAerialData {
 
 interface FirebaseAlertData {
   sectorId: string;
-  type: 'cloudburst_detected' | 'high_probability' | 'aerial_deployed';
-  severity: AlertLevel;
+  type: 'cloudburst_detected' | 'high_probability' | 'aerial_deployed' | 'aerial_recalled' | 'system_warning';
+  severity: AlertSeverity;
+  title?: string;
   message: string;
-  timestamp: number;
+  probability?: number;
+  wind?: WindData | null;
+  aerialStatus?: AerialStatus | null;
+  timestamp: number | string;
   acknowledged: boolean;
-  acknowledgedAt: number | null;
+  acknowledgedAt: number | string | null;
   acknowledgedBy: string | null;
+}
+
+// ============================================
+// Helper Functions
+// ============================================
+
+function normalizePredictionSource(source: string): 'ground' | 'ground+aerial' | 'unavailable' {
+  if (source === 'aerial') return 'ground+aerial';
+  if (source === 'ground' || source === 'ground+aerial' || source === 'unavailable') {
+    return source;
+  }
+  return 'unavailable';
+}
+
+function normalizeCloudburstConfidence(conf?: string): 'high' | 'medium' | 'low' | null {
+  if (!conf) return null;
+  const lower = conf.toLowerCase();
+  if (lower === 'high' || lower === 'medium' || lower === 'low') {
+    return lower as 'high' | 'medium' | 'low';
+  }
+  return null;
+}
+
+function getAlertTitle(type: string): string {
+  switch (type) {
+    case 'cloudburst_detected':
+      return 'Cloudburst Detected';
+    case 'high_probability':
+      return 'High Probability Alert';
+    case 'aerial_deployed':
+      return 'Aerial Monitoring Deployed';
+    case 'aerial_recalled':
+      return 'Aerial Unit Recalled';
+    case 'system_warning':
+      return 'System Warning';
+    default:
+      return 'Alert';
+  }
 }
 
 // ============================================
@@ -267,7 +311,9 @@ export async function getWind(): Promise<WindData | null> {
     return {
       direction: data.direction,
       speed: data.speed,
-      timestamp: data.timestamp,
+      timestamp: typeof data.timestamp === 'number'
+        ? new Date(data.timestamp).toISOString()
+        : data.timestamp,
     };
   }
 
@@ -300,7 +346,9 @@ export function subscribeWind(
       callback({
         direction: data.direction,
         speed: data.speed,
-        timestamp: data.timestamp,
+        timestamp: typeof data.timestamp === 'number'
+          ? new Date(data.timestamp).toISOString()
+          : data.timestamp,
       });
     } else {
       callback(null);
@@ -355,10 +403,15 @@ export async function deployAerial(
 
   // Create deployment alert
   await createAlert({
+    alertId: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     sectorId: targetSectorId,
     type: 'aerial_deployed',
-    severity: 'elevated',
+    severity: 'info',
+    title: 'Aerial Monitoring Deployed',
     message: `Aerial monitoring deploying to sector ${targetSectorId}`,
+    probability: 0,
+    wind: null,
+    aerialStatus: 'deploying',
   });
 }
 
@@ -427,20 +480,39 @@ export async function getAlerts(): Promise<Alert[]> {
 
     Object.entries(data).forEach(([alertId, alertData]) => {
       alerts.push({
-        id: alertId,
-        ...alertData,
+        alertId,
+        sectorId: alertData.sectorId,
+        type: alertData.type,
+        severity: alertData.severity,
+        title: alertData.title ?? getAlertTitle(alertData.type),
+        message: alertData.message,
+        probability: alertData.probability ?? 0,
+        wind: alertData.wind ?? null,
+        aerialStatus: alertData.aerialStatus ?? null,
+        timestamp: typeof alertData.timestamp === 'number'
+          ? new Date(alertData.timestamp).toISOString()
+          : alertData.timestamp,
+        acknowledged: alertData.acknowledged,
+        acknowledgedAt: alertData.acknowledgedAt
+          ? typeof alertData.acknowledgedAt === 'number'
+            ? new Date(alertData.acknowledgedAt).toISOString()
+            : alertData.acknowledgedAt
+          : null,
+        acknowledgedBy: alertData.acknowledgedBy,
       });
     });
   }
 
-  return alerts.sort((a, b) => b.timestamp - a.timestamp);
+  return alerts.sort((a, b) =>
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
 }
 
 /**
  * Create a new alert
  */
 export async function createAlert(
-  alert: Omit<Alert, 'id' | 'timestamp' | 'acknowledged' | 'acknowledgedAt' | 'acknowledgedBy'>
+  alert: Omit<Alert, 'timestamp' | 'acknowledged' | 'acknowledgedAt' | 'acknowledgedBy'>
 ): Promise<string> {
   const alertsRef = ref(database, PATHS.alerts);
   const alertId = `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -497,13 +569,32 @@ export function subscribeAlerts(
 
       Object.entries(data).forEach(([alertId, alertData]) => {
         alerts.push({
-          id: alertId,
-          ...alertData,
+          alertId,
+          sectorId: alertData.sectorId,
+          type: alertData.type,
+          severity: alertData.severity,
+          title: alertData.title ?? getAlertTitle(alertData.type),
+          message: alertData.message,
+          probability: alertData.probability ?? 0,
+          wind: alertData.wind ?? null,
+          aerialStatus: alertData.aerialStatus ?? null,
+          timestamp: typeof alertData.timestamp === 'number'
+            ? new Date(alertData.timestamp).toISOString()
+            : alertData.timestamp,
+          acknowledged: alertData.acknowledged,
+          acknowledgedAt: alertData.acknowledgedAt
+            ? typeof alertData.acknowledgedAt === 'number'
+              ? new Date(alertData.acknowledgedAt).toISOString()
+              : alertData.acknowledgedAt
+            : null,
+          acknowledgedBy: alertData.acknowledgedBy,
         });
       });
     }
 
-    callback(alerts.sort((a, b) => b.timestamp - a.timestamp));
+    callback(alerts.sort((a, b) =>
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    ));
   });
 
   return () => unsubscribe();
@@ -516,25 +607,31 @@ export function subscribeAlerts(
 /**
  * Get all sensor nodes
  */
-export async function getNodes(): Promise<SectorNode[]> {
+export async function getNodes(): Promise<SensorNode[]> {
   const nodesRef = ref(database, PATHS.nodes);
   const snapshot = await get(nodesRef);
 
-  const nodes: SectorNode[] = [];
+  const nodes: SensorNode[] = [];
 
   if (snapshot.exists()) {
     const data = snapshot.val() as Record<string, any>;
 
     Object.entries(data).forEach(([nodeId, nodeData]) => {
-      if (nodeData.location) {
+      const lat = nodeData.latitude ?? nodeData.location?.lat ?? nodeData.location?.latitude;
+      const lng = nodeData.longitude ?? nodeData.location?.lng ?? nodeData.location?.longitude;
+      if (lat !== undefined && lng !== undefined) {
         nodes.push({
           nodeId,
-          location: {
-            lat: nodeData.location.lat || nodeData.location.latitude,
-            lng: nodeData.location.lng || nodeData.location.longitude,
-          },
-          status: nodeData.status || 'online',
-          lastSeen: nodeData.lastSeen || Date.now(),
+          name: nodeData.name ?? nodeId,
+          latitude: lat,
+          longitude: lng,
+          sectorId: nodeData.sectorId ?? '',
+          status: nodeData.status === 'inactive' ? 'inactive' : 'active',
+          type: nodeData.type === 'gateway' ? 'gateway' : 'sensor',
+          lastSeen: typeof nodeData.lastSeen === 'number'
+            ? new Date(nodeData.lastSeen).toISOString()
+            : nodeData.lastSeen ?? new Date().toISOString(),
+          nearbyNodes: nodeData.nearbyNodes,
         });
       }
     });
@@ -547,26 +644,32 @@ export async function getNodes(): Promise<SectorNode[]> {
  * Subscribe to node updates
  */
 export function subscribeNodes(
-  callback: (nodes: SectorNode[]) => void
+  callback: (nodes: SensorNode[]) => void
 ): () => void {
   const nodesRef = ref(database, PATHS.nodes);
 
   const unsubscribe = onValue(nodesRef, (snapshot) => {
-    const nodes: SectorNode[] = [];
+    const nodes: SensorNode[] = [];
 
     if (snapshot.exists()) {
       const data = snapshot.val() as Record<string, any>;
 
       Object.entries(data).forEach(([nodeId, nodeData]) => {
-        if (nodeData.location) {
+        const lat = nodeData.latitude ?? nodeData.location?.lat ?? nodeData.location?.latitude;
+        const lng = nodeData.longitude ?? nodeData.location?.lng ?? nodeData.location?.longitude;
+        if (lat !== undefined && lng !== undefined) {
           nodes.push({
             nodeId,
-            location: {
-              lat: nodeData.location.lat || nodeData.location.latitude,
-              lng: nodeData.location.lng || nodeData.location.longitude,
-            },
-            status: nodeData.status || 'online',
-            lastSeen: nodeData.lastSeen || Date.now(),
+            name: nodeData.name ?? nodeId,
+            latitude: lat,
+            longitude: lng,
+            sectorId: nodeData.sectorId ?? '',
+            status: nodeData.status === 'inactive' ? 'inactive' : 'active',
+            type: nodeData.type === 'gateway' ? 'gateway' : 'sensor',
+            lastSeen: typeof nodeData.lastSeen === 'number'
+              ? new Date(nodeData.lastSeen).toISOString()
+              : nodeData.lastSeen ?? new Date().toISOString(),
+            nearbyNodes: nodeData.nearbyNodes,
           });
         }
       });
@@ -596,14 +699,24 @@ function firebaseSectorToState(
     currentProbability: data.probability,
     historicalProbability: [], // Can be fetched separately
     alertLevel: data.alertLevel,
-    predictionSource: data.predictionSource,
+    predictionSource: normalizePredictionSource(data.predictionSource),
     confidence: data.confidence,
     cloudburstDetected: data.cloudburstDetected,
-    cloudburstConfidence: data.cloudburstConfidence,
+    cloudburstConfidence: normalizeCloudburstConfidence(data.cloudburstConfidence),
     aerialDeployed: data.aerialDeployed,
-    weather: data.weather || null,
-    rainfall: data.rainfall || null,
-    lastUpdated: data.lastUpdated,
+    weather: data.weather ? {
+      temperature: data.weather.temperature,
+      pressure: data.weather.pressure,
+      humidity: data.weather.humidity,
+      timestamp: new Date(data.lastUpdated).toISOString(),
+    } : null,
+    rainfall: data.rainfall ? {
+      rate: data.rainfall.rate,
+      cumulative: data.rainfall.accumulated ?? 0,
+      timestamp: new Date(data.lastUpdated).toISOString(),
+    } : null,
+    wind: null, // Wind is fetched separately
+    lastUpdated: new Date(data.lastUpdated).toISOString(),
   };
 }
 

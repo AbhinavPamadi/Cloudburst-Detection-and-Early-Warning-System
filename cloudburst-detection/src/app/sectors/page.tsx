@@ -9,7 +9,9 @@ import { AlertToastContainer, StackedBanners } from '@/components/Alerts';
 import { BottomDrawer, SectorModal } from '@/components/Mobile';
 import ProtectedPage from '@/features/auth/ProtectedPage';
 import { Roles } from '@/features/auth/authService';
-import { AlertCircle, Layers, Menu, X } from 'lucide-react';
+import { AlertCircle, Layers, Map, List, Menu, X } from 'lucide-react';
+import { OccurrencesPanel } from '@/components/Occurrences';
+import type { SectorViewTab } from '@/types/sector.types';
 
 // Dynamic import for map to avoid SSR issues with Leaflet
 const SectorMap = dynamic(
@@ -36,11 +38,16 @@ const SectorMap = dynamic(
 function SectorDashboardInner() {
   const {
     sectors,
+    nodes,
+    clouds,
+    alertHistory,
     wind,
     aerialPayloads,
     alerts,
     selectedSector,
     selectSector,
+    selectNode,
+    selectCloud,
     isConnected,
     lastSync,
     acknowledgeAlert,
@@ -52,6 +59,7 @@ function SectorDashboardInner() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileModalOpen, setMobileModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [activeTab, setActiveTab] = useState<SectorViewTab>('maps');
 
   // Check for mobile screen size
   useEffect(() => {
@@ -117,6 +125,18 @@ function SectorDashboardInner() {
     return highest;
   }, [sectors]);
 
+  // Handle view on map from occurrences
+  const handleViewOnMap = useCallback(
+    (sectorId: string) => {
+      const sector = sectors.get(sectorId);
+      if (sector) {
+        handleSectorSelect(sector);
+        setActiveTab('maps');
+      }
+    },
+    [sectors, handleSectorSelect]
+  );
+
   // Loading state
   if (sectors.size === 0 && !isConnected) {
     return (
@@ -149,7 +169,38 @@ function SectorDashboardInner() {
         onViewDetails={handleAlertClick}
       />
 
-      {/* Main Map Area */}
+      {/* Tab Navigation */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex bg-white dark:bg-gray-800 rounded-lg shadow-lg p-1">
+        <button
+          onClick={() => setActiveTab('maps')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'maps'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`}
+        >
+          <Map className="w-4 h-4" />
+          Maps
+        </button>
+        <button
+          onClick={() => setActiveTab('occurrences')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'occurrences'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`}
+        >
+          <List className="w-4 h-4" />
+          Occurrences
+          {alertHistory.filter(a => a.status === 'active').length > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full">
+              {alertHistory.filter(a => a.status === 'active').length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Main Content Area */}
       <main className="flex-1 relative">
         {/* Mobile Menu Toggle */}
         <button
@@ -165,36 +216,61 @@ function SectorDashboardInner() {
           )}
         </button>
 
-        {/* Sector Map */}
-        <SectorMap
-          sectors={sectors}
-          wind={wind}
-          aerialPayloads={aerialPayloads}
-          selectedSectorId={selectedSector?.sectorId || null}
-          onSectorSelect={handleSectorSelect}
-          showWindIndicators
-          showAerialMarkers
-          showLegend
-          className="h-full w-full"
-        />
+        {/* Maps Tab Content */}
+        {activeTab === 'maps' && (
+          <>
+            {/* Sector Map */}
+            <SectorMap
+              sectors={sectors}
+              nodes={nodes}
+              clouds={clouds}
+              wind={wind}
+              aerialPayloads={aerialPayloads}
+              selectedSectorId={selectedSector?.sectorId || null}
+              onSectorSelect={handleSectorSelect}
+              onNodeClick={selectNode}
+              onCloudClick={selectCloud}
+              showWindIndicators
+              showAerialMarkers
+              showNodeMarkers
+              showCloudMarkers
+              showCloudTrajectories
+              showLegend
+              className="h-full w-full"
+            />
 
-        {/* Connection Status Indicator */}
-        <div
-          className={`absolute bottom-4 left-4 z-20 px-3 py-1.5 rounded-full text-xs font-medium
-            flex items-center gap-2 shadow-lg
-            ${
-              isConnected
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
-                : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
-            }`}
-        >
-          <span
-            className={`w-2 h-2 rounded-full ${
-              isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
-            }`}
-          />
-          {isConnected ? 'Live' : 'Disconnected'}
-        </div>
+            {/* Connection Status Indicator */}
+            <div
+              className={`absolute bottom-4 left-4 z-20 px-3 py-1.5 rounded-full text-xs font-medium
+                flex items-center gap-2 shadow-lg
+                ${
+                  isConnected
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
+                    : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
+                }`}
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+                }`}
+              />
+              {isConnected ? 'Live' : 'Disconnected'}
+            </div>
+          </>
+        )}
+
+        {/* Occurrences Tab Content */}
+        {activeTab === 'occurrences' && (
+          <div className="h-full bg-gray-50 dark:bg-gray-900">
+            <OccurrencesPanel
+              alertHistory={alertHistory}
+              sectors={sectors}
+              onViewOnMap={handleViewOnMap}
+              onAcknowledge={acknowledgeAlert}
+              className="h-full"
+            />
+          </div>
+        )}
       </main>
 
       {/* Desktop Sidebar */}
@@ -285,7 +361,7 @@ export default function SectorDashboardPage() {
   }
 
   return (
-    <ProtectedPage allowedRoles={[Roles.ADMIN, Roles.USER]}>
+    <ProtectedPage allowedRoles={[Roles.ADMIN, Roles.USER]} fallbackRoute="/login">
       <SectorProvider>
         <SectorDashboardInner />
       </SectorProvider>

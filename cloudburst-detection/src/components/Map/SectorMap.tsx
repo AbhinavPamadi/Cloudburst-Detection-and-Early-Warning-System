@@ -6,8 +6,11 @@ import 'leaflet/dist/leaflet.css';
 import { SectorOverlay } from './SectorOverlay';
 import { WindIndicators } from './WindIndicator';
 import { AerialMarkers } from './AerialMarker';
+import { NodeMarkers } from './NodeMarker';
+import { CloudMarkers } from './CloudMarker';
+import { CloudTrajectories } from './CloudTrajectory';
 import { SectorLegend } from './SectorLegend';
-import type { SectorState, WindData, AerialPayload, Coordinates } from '@/types/sector.types';
+import type { SectorState, WindData, AerialPayload, Coordinates, NodeData, CloudData } from '@/types/sector.types';
 
 // ============================================
 // Types
@@ -15,13 +18,20 @@ import type { SectorState, WindData, AerialPayload, Coordinates } from '@/types/
 
 interface SectorMapProps {
   sectors: Map<string, SectorState>;
+  nodes?: Map<string, NodeData>;
+  clouds?: CloudData[];
   wind: WindData | null;
   aerialPayloads?: AerialPayload[];
   selectedSectorId?: string | null;
   onSectorSelect?: (sector: SectorState | null) => void;
   onSectorHover?: (sector: SectorState | null) => void;
+  onNodeClick?: (node: NodeData) => void;
+  onCloudClick?: (cloud: CloudData) => void;
   showWindIndicators?: boolean;
   showAerialMarkers?: boolean;
+  showNodeMarkers?: boolean;
+  showCloudMarkers?: boolean;
+  showCloudTrajectories?: boolean;
   showLegend?: boolean;
   center?: Coordinates;
   zoom?: number;
@@ -41,13 +51,20 @@ const DEFAULT_ZOOM = 9;
 
 export function SectorMap({
   sectors,
+  nodes,
+  clouds = [],
   wind,
   aerialPayloads = [],
   selectedSectorId,
   onSectorSelect,
   onSectorHover,
+  onNodeClick,
+  onCloudClick,
   showWindIndicators = true,
   showAerialMarkers = true,
+  showNodeMarkers = true,
+  showCloudMarkers = true,
+  showCloudTrajectories = true,
   showLegend = true,
   center = DEFAULT_CENTER,
   zoom = DEFAULT_ZOOM,
@@ -55,6 +72,9 @@ export function SectorMap({
 }: SectorMapProps) {
   const [isConnected, setIsConnected] = useState(true);
   const [hoveredSector, setHoveredSector] = useState<SectorState | null>(null);
+
+  // Convert nodes Map to array for rendering
+  const nodesArray = nodes ? Array.from(nodes.values()) : [];
 
   // Handle sector click
   const handleSectorClick = useCallback(
@@ -128,6 +148,21 @@ export function SectorMap({
             wind={wind}
             showOnlyOnCloudburst={true}
           />
+        )}
+
+        {/* Cloud Trajectories (rendered behind clouds) */}
+        {showCloudTrajectories && clouds.length > 0 && (
+          <CloudTrajectories clouds={clouds} showMarkers={true} />
+        )}
+
+        {/* Cloud Markers */}
+        {showCloudMarkers && clouds.length > 0 && (
+          <CloudMarkers clouds={clouds} onCloudClick={onCloudClick} />
+        )}
+
+        {/* Node Markers */}
+        {showNodeMarkers && nodesArray.length > 0 && (
+          <NodeMarkers nodes={nodesArray} onNodeClick={onNodeClick} />
         )}
 
         {/* Aerial Markers */}

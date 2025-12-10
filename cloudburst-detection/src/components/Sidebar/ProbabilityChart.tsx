@@ -91,12 +91,17 @@ export function ProbabilityChart({ sector, height = 150 }: ProbabilityChartProps
       }));
     }
 
-    return sector.historicalProbability.map((point) => ({
-      time: formatTime(point.timestamp),
-      timestamp: point.timestamp,
-      probability: point.probability,
-      color: getColorForProbability(point.probability),
-    }));
+    return sector.historicalProbability.map((point) => {
+      const ts = typeof point.timestamp === 'string'
+        ? new Date(point.timestamp).getTime()
+        : point.timestamp;
+      return {
+        time: formatTime(ts),
+        timestamp: ts,
+        probability: point.probability,
+        color: getColorForProbability(point.probability),
+      };
+    });
   }, [sector.historicalProbability, sector.currentProbability]);
 
   const trend = useMemo(() => {

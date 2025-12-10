@@ -20,6 +20,9 @@ import type {
   AlertLevel,
   SensorNode,
   ProbabilityHistoryPoint,
+  NodeData,
+  CloudData,
+  AlertHistoryItem,
 } from '@/types/sector.types';
 import {
   generateVoronoiSectors,
@@ -30,6 +33,142 @@ import { getAlertLevel } from '@/utils/sectorCalculations';
 // ============================================
 // Demo Data Generation (for testing)
 // ============================================
+
+// Generate demo nodes for each sector
+function generateDemoNodes(sectors: Map<string, SectorState>): Map<string, NodeData> {
+  const nodes = new Map<string, NodeData>();
+  let nodeIndex = 0;
+
+  sectors.forEach((sector) => {
+    // Create 2-3 nodes per sector
+    const nodeCount = 2 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < nodeCount; i++) {
+      const nodeId = `node-${sector.sectorId}-${i}`;
+      const isOnline = Math.random() > 0.2; // 80% chance of being online
+
+      nodes.set(nodeId, {
+        nodeId,
+        name: `${sector.name} Node ${i + 1}`,
+        position: {
+          lat: sector.centroid.lat + (Math.random() - 0.5) * 0.1,
+          lng: sector.centroid.lng + (Math.random() - 0.5) * 0.1,
+        },
+        status: isOnline ? 'online' : 'offline',
+        lastSeen: isOnline
+          ? new Date().toISOString()
+          : new Date(Date.now() - Math.random() * 86400000).toISOString(),
+        readings: isOnline ? {
+          temperature: 15 + Math.random() * 10,
+          pressure: 900 + Math.random() * 50,
+          humidity: 60 + Math.random() * 35,
+          rssi: -50 - Math.random() * 40,
+        } : undefined,
+      });
+      nodeIndex++;
+    }
+  });
+
+  return nodes;
+}
+
+// Generate demo cloud data based on high-probability sectors
+function generateDemoClouds(sectors: Map<string, SectorState>, wind: WindData | null): CloudData[] {
+  const clouds: CloudData[] = [];
+
+  // Find sectors with probability > 50% for cloud placement
+  sectors.forEach((sector) => {
+    if (sector.currentProbability > 50) {
+      const windSpeed = wind?.speed || 5;
+      const windDirection = wind?.direction || 45;
+
+      // Calculate predicted path based on wind
+      const predictedPath: { lat: number; lng: number }[] = [];
+      for (let i = 1; i <= 4; i++) {
+        // Move cloud in wind direction over time (15min intervals)
+        const distanceKm = (windSpeed * 900 * i) / 1000; // 15 min in km
+        const radians = (windDirection * Math.PI) / 180;
+        const dLat = (distanceKm / 111) * Math.cos(radians);
+        const dLng = (distanceKm / (111 * Math.cos(sector.centroid.lat * Math.PI / 180))) * Math.sin(radians);
+
+        predictedPath.push({
+          lat: sector.centroid.lat + dLat,
+          lng: sector.centroid.lng + dLng,
+        });
+      }
+
+      clouds.push({
+        cloudId: `cloud-${sector.sectorId}`,
+        position: {
+          lat: sector.centroid.lat,
+          lng: sector.centroid.lng,
+        },
+        cape: 1500 + Math.random() * 2000, // CAPE in J/kg
+        temperature: -10 - Math.random() * 20, // Cloud top temp
+        coverage: 40 + sector.currentProbability * 0.5,
+        intensity: sector.currentProbability > 80 ? 'heavy' :
+                   sector.currentProbability > 60 ? 'moderate' : 'light',
+        movement: {
+          speed: windSpeed,
+          direction: windDirection,
+        },
+        predictedPath,
+        lastUpdated: new Date().toISOString(),
+      });
+    }
+  });
+
+  return clouds;
+}
+
+// Generate demo alert history
+function generateDemoAlertHistory(sectors: Map<string, SectorState>): AlertHistoryItem[] {
+  const history: AlertHistoryItem[] = [];
+  let alertIndex = 0;
+
+  // Create some historical alerts
+  sectors.forEach((sector) => {
+    if (sector.currentProbability > 40) {
+      // Recent active alert
+      history.push({
+        alertId: `alert-${alertIndex++}`,
+        type: sector.cloudburstDetected ? 'cloudburst' : 'high_probability',
+        severity: sector.currentProbability > 75 ? 'critical' :
+                  sector.currentProbability > 50 ? 'warning' : 'info',
+        sectorId: sector.sectorId,
+        sectorName: sector.name,
+        probability: sector.currentProbability,
+        timestamp: new Date().toISOString(),
+        status: 'active',
+        message: sector.cloudburstDetected
+          ? `Cloudburst detected in ${sector.name}!`
+          : `High probability (${sector.currentProbability}%) in ${sector.name}`,
+      });
+    }
+
+    // Add some historical acknowledged alerts
+    if (Math.random() > 0.5) {
+      const pastTime = new Date(Date.now() - Math.random() * 86400000 * 3);
+      history.push({
+        alertId: `alert-${alertIndex++}`,
+        type: 'high_probability',
+        severity: 'warning',
+        sectorId: sector.sectorId,
+        sectorName: sector.name,
+        probability: 50 + Math.random() * 30,
+        timestamp: pastTime.toISOString(),
+        status: 'acknowledged',
+        acknowledgedBy: 'operator@example.com',
+        acknowledgedAt: new Date(pastTime.getTime() + 300000).toISOString(),
+        message: `Previous alert in ${sector.name}`,
+      });
+    }
+  });
+
+  // Sort by timestamp descending
+  return history.sort((a, b) =>
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+}
 
 function generateDemoSectors(): Map<string, SectorState> {
   const demoSectors = new Map<string, SectorState>();
@@ -66,18 +205,19 @@ function generateDemoSectors(): Map<string, SectorState> {
       predictionSource: data.prob > 60 ? 'ground+aerial' : 'ground',
       alertLevel: getAlertLevel(data.prob),
       cloudburstDetected: data.cloudburst || false,
-      cloudburstConfidence: data.cloudburst ? 'High' : null,
+      cloudburstConfidence: data.cloudburst ? 'high' : null,
       aerialDeployed: data.prob > 50,
       lastUpdated: new Date().toISOString(),
       weather: {
         temperature: 15 + Math.random() * 10,
         humidity: 70 + Math.random() * 25,
         pressure: 900 + Math.random() * 50,
+        timestamp: new Date().toISOString(),
       },
       rainfall: {
         rate: data.prob > 50 ? 20 + Math.random() * 30 : Math.random() * 10,
-        accumulated: Math.random() * 100,
-        duration: Math.floor(Math.random() * 120),
+        cumulative: Math.random() * 100,
+        timestamp: new Date().toISOString(),
       },
       wind: null,
       historicalProbability: Array.from({ length: 12 }, (_, i) => ({
@@ -98,11 +238,16 @@ function generateDemoSectors(): Map<string, SectorState> {
 interface SectorContextValue {
   // State
   sectors: Map<string, SectorState>;
+  nodes: Map<string, NodeData>;
+  clouds: CloudData[];
+  alertHistory: AlertHistoryItem[];
   wind: WindData | null;
   aerialPayloads: AerialPayload[];
   alerts: Alert[];
   selectedSector: SectorState | null;
   hoveredSector: SectorState | null;
+  selectedNode: NodeData | null;
+  selectedCloud: CloudData | null;
 
   // Status
   isLoading: boolean;
@@ -117,6 +262,8 @@ interface SectorContextValue {
 
   // Actions
   selectSector: (sector: SectorState | null) => void;
+  selectNode: (node: NodeData | null) => void;
+  selectCloud: (cloud: CloudData | null) => void;
   setHoveredSector: (sectorId: string | null) => void;
   refreshSectors: () => Promise<void>;
   updateSectorProbability: (sectorId: string, probability: number) => Promise<void>;
@@ -146,11 +293,16 @@ export function SectorProvider({
 }: SectorProviderProps) {
   // State
   const [sectors, setSectors] = useState<Map<string, SectorState>>(new Map());
+  const [nodes, setNodes] = useState<Map<string, NodeData>>(new Map());
+  const [clouds, setClouds] = useState<CloudData[]>([]);
+  const [alertHistory, setAlertHistory] = useState<AlertHistoryItem[]>([]);
   const [wind, setWind] = useState<WindData | null>(null);
   const [aerialPayloads, setAerialPayloads] = useState<AerialPayload[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [selectedSectorId, setSelectedSectorId] = useState<string | null>(null);
   const [hoveredSectorId, setHoveredSectorId] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedCloudId, setSelectedCloudId] = useState<string | null>(null);
 
   // Status
   const [isLoading, setIsLoading] = useState(true);
@@ -178,6 +330,14 @@ export function SectorProvider({
     ? sectors.get(hoveredSectorId) || null
     : null;
 
+  const selectedNode = selectedNodeId
+    ? nodes.get(selectedNodeId) || null
+    : null;
+
+  const selectedCloud = selectedCloudId
+    ? clouds.find(c => c.cloudId === selectedCloudId) || null
+    : null;
+
   const sectorsByAlertLevel: Record<AlertLevel, number> = {
     normal: 0,
     elevated: 0,
@@ -195,6 +355,14 @@ export function SectorProvider({
 
   const selectSector = useCallback((sector: SectorState | null) => {
     setSelectedSectorId(sector?.sectorId || null);
+  }, []);
+
+  const selectNode = useCallback((node: NodeData | null) => {
+    setSelectedNodeId(node?.nodeId || null);
+  }, []);
+
+  const selectCloud = useCallback((cloud: CloudData | null) => {
+    setSelectedCloudId(cloud?.cloudId || null);
   }, []);
 
   const setHoveredSector = useCallback((sectorId: string | null) => {
@@ -338,6 +506,16 @@ export function SectorProvider({
           // No sectors in Firebase - generate demo sectors for testing
           const demoSectors = generateDemoSectors();
           setSectors(demoSectors);
+
+          // Also generate demo nodes and clouds
+          const demoNodes = generateDemoNodes(demoSectors);
+          setNodes(demoNodes);
+          setTotalNodes(demoNodes.size);
+          setActiveNodes(Array.from(demoNodes.values()).filter(n => n.status === 'online').length);
+
+          // Generate demo alert history
+          const demoHistory = generateDemoAlertHistory(demoSectors);
+          setAlertHistory(demoHistory);
         }
         setIsLoading(false);
       },
@@ -470,17 +648,33 @@ export function SectorProvider({
   }, []);
 
   // ============================================
+  // Cloud Data Generation (updates when sectors/wind change)
+  // ============================================
+
+  useEffect(() => {
+    if (sectors.size > 0) {
+      const demoClouds = generateDemoClouds(sectors, wind);
+      setClouds(demoClouds);
+    }
+  }, [sectors, wind]);
+
+  // ============================================
   // Context Value
   // ============================================
 
   const value: SectorContextValue = {
     // State
     sectors,
+    nodes,
+    clouds,
+    alertHistory,
     wind,
     aerialPayloads,
     alerts,
     selectedSector,
     hoveredSector,
+    selectedNode,
+    selectedCloud,
 
     // Status
     isLoading,
@@ -495,6 +689,8 @@ export function SectorProvider({
 
     // Actions
     selectSector,
+    selectNode,
+    selectCloud,
     setHoveredSector,
     refreshSectors,
     updateSectorProbability,

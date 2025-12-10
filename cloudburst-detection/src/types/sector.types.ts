@@ -107,7 +107,7 @@ export interface SectorState extends Sector {
 
 export interface ProbabilityHistoryPoint {
   probability: number;
-  timestamp: string;
+  timestamp: string | number; // Can be ISO string or Unix timestamp
 }
 
 export interface SectorGeoJSON extends Feature<Polygon> {
@@ -467,3 +467,81 @@ export type DeepPartial<T> = {
 };
 
 export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+// ============================================
+// Node Data Types (for map markers)
+// ============================================
+
+export interface NodeData {
+  nodeId: string;
+  name: string;
+  position: Coordinates;
+  status: 'online' | 'offline';
+  lastSeen: string;              // ISO 8601
+  readings?: {
+    temperature: number;         // Celsius
+    pressure: number;            // hPa
+    humidity: number;            // 0-100%
+    rssi: number;                // Signal strength dBm
+  };
+}
+
+// ============================================
+// Cloud Visualization Types
+// ============================================
+
+export type CloudIntensity = 'light' | 'moderate' | 'heavy';
+
+export interface CloudMovement {
+  speed: number;                 // m/s
+  direction: number;             // degrees (0=N, 90=E, 180=S, 270=W)
+}
+
+export interface CloudData {
+  cloudId: string;
+  position: Coordinates;
+  cape: number;                  // Convective Available Potential Energy (J/kg)
+  temperature: number;           // Cloud top temperature (Celsius)
+  coverage: number;              // 0-100%
+  intensity: CloudIntensity;
+  movement: CloudMovement;
+  predictedPath: Coordinates[];  // Positions at 15min intervals (4 points = 1hr)
+  lastUpdated: string;           // ISO 8601
+}
+
+// ============================================
+// Alert History Types (for Occurrences tab)
+// ============================================
+
+export type AlertHistoryType = 'cloudburst' | 'high_probability' | 'aerial_deployed' | 'system_warning';
+export type AlertHistoryStatus = 'active' | 'acknowledged' | 'dismissed';
+
+export interface AlertHistoryItem {
+  alertId: string;
+  type: AlertHistoryType;
+  severity: AlertSeverity;
+  sectorId: string;
+  sectorName: string;
+  probability: number;
+  timestamp: string;             // ISO 8601
+  status: AlertHistoryStatus;
+  acknowledgedBy?: string;
+  acknowledgedAt?: string;
+  message?: string;
+}
+
+// ============================================
+// Tab State Types
+// ============================================
+
+export type SectorViewTab = 'maps' | 'occurrences';
+
+export interface OccurrencesFilterState {
+  dateRange: {
+    start: string | null;
+    end: string | null;
+  };
+  severity: AlertSeverity | 'all';
+  status: AlertHistoryStatus | 'all';
+  sectorId: string | null;
+}
