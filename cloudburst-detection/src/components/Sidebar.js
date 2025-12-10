@@ -71,6 +71,12 @@ const NAV_ITEMS = [
     roles: [Roles.ADMIN, Roles.NODE_REGISTRAR, Roles.USER],
   },
   {
+    href: "/sectors",
+    label: "Sectors",
+    icon: MapPin,
+    roles: [Roles.ADMIN, Roles.USER],
+  },
+  {
     href: "/contacts",
     label: "Contacts",
     icon: Users,
