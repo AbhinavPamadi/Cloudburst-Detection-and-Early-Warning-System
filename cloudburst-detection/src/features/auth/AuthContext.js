@@ -141,8 +141,12 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    const auth = getAuth();
-    await firebaseSignOut(auth);
+    try {
+      const auth = getAuth();
+      await firebaseSignOut(auth);
+    } catch (error) {
+      console.error("Firebase sign out error:", error);
+    }
     // clear local storage
     if (typeof window !== "undefined") {
       window.localStorage.removeItem("currentUser");
@@ -150,6 +154,15 @@ export function AuthProvider({ children }) {
     setUser(null);
     setRole(null);
     setIsAuthenticated(false);
+    // Force redirect to login page
+    if (typeof window !== "undefined") {
+      import("next/navigation").then(({ useRouter }) => {
+        // Use setTimeout to ensure state is updated before redirect
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 100);
+      });
+    }
   };
 
   return (
