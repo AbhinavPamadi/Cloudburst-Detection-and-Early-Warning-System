@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import ProtectedPage from "@/features/auth/ProtectedPage";
 import { Roles } from "@/features/auth/authService";
 import { BarChart2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const GraphsContent = dynamic(
   () => import("@/app/graphs/page").then((mod) => mod.default),
@@ -29,6 +30,7 @@ const AdminAnalytics = dynamic(
 );
 
 export default function DataAnalyticsPage() {
+  const t = useTranslations("dataAnalytics");
   return (
     <ProtectedPage allowedRoles={[Roles.ADMIN, Roles.USER]}>
       <div className="px-4 pb-6 pt-4 md:px-6">
@@ -36,11 +38,10 @@ export default function DataAnalyticsPage() {
           <BarChart2 className="h-5 w-5 text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Data &amp; Analytics
+              {t("title")}
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Explore historical graphs and advanced analytics with shared
-              filters.
+              {t("subtitle")}
             </p>
           </div>
         </header>
@@ -49,16 +50,15 @@ export default function DataAnalyticsPage() {
           {/* Data & Graphs Section */}
           <section className="rounded-xl bg-white p-4 shadow-sm dark:bg-gray-900">
             <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
-              Data &amp; Graphs
+              {t("dataGraphs")}
             </h2>
             <p className="mb-3 text-xs text-gray-600 dark:text-gray-400">
-              Use node and time range filters to control both charts and
-              downstream analytics.
+              {t("dataGraphsDesc")}
             </p>
             <Suspense
               fallback={
                 <div className="flex min-h-[200px] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
-                  Loading charts…
+                  {t("loadingCharts")}
                 </div>
               }
             >
@@ -69,11 +69,10 @@ export default function DataAnalyticsPage() {
           {/* Analytics Section – admin-only, but page itself already admin-guarded */}
           <section className="rounded-xl bg-white p-4 shadow-sm dark:bg-gray-900">
             <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
-              Analytics
+              {t("analytics")}
             </h2>
             <p className="mb-3 text-xs text-gray-600 dark:text-gray-400">
-              Administrative analytics and system insights, using the same
-              underlying data.
+              {t("analyticsDesc")}
             </p>
             <Suspense>
               <AdminAnalytics />
