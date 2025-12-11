@@ -14,12 +14,24 @@ export const formatTimeAgo = (timestamp) => {
 };
 
 /**
- * Format timestamp to readable date
+ * Format timestamp to readable date (using local timezone)
  */
 export const formatDateTime = (timestamp) => {
   if (!timestamp) return 'N/A';
   try {
-    return format(new Date(timestamp), 'MMM dd, yyyy HH:mm:ss');
+    const date = new Date(timestamp);
+    // Use toLocaleString to ensure local timezone is used
+    // Format: "MMM dd, yyyy HH:mm:ss"
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const day = date.toLocaleString('en-US', { day: '2-digit' });
+    const year = date.toLocaleString('en-US', { year: 'numeric' });
+    const time = date.toLocaleString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit',
+      hour12: false 
+    });
+    return `${month} ${day}, ${year} ${time}`;
   } catch {
     return 'Invalid date';
   }

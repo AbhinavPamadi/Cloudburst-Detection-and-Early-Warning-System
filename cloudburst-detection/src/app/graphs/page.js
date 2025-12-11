@@ -256,11 +256,24 @@ function GraphsContent() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="timestamp" 
-                    tickFormatter={(ts) => new Date(ts).toLocaleTimeString()}
+                    tickFormatter={(ts) => {
+                      const date = new Date(ts);
+                      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    }}
                   />
                   <YAxis />
                   <Tooltip 
-                    labelFormatter={(ts) => formatDateTime(ts)}
+                    labelFormatter={(ts) => {
+                      const date = new Date(ts);
+                      return date.toLocaleString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false 
+                      });
+                    }}
                     formatter={(value) => [`${value?.toFixed(1)}°C`, 'Temperature']}
                   />
                   <Legend />
@@ -277,11 +290,24 @@ function GraphsContent() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="timestamp" 
-                    tickFormatter={(ts) => new Date(ts).toLocaleTimeString()}
+                    tickFormatter={(ts) => {
+                      const date = new Date(ts);
+                      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    }}
                   />
                   <YAxis />
                   <Tooltip 
-                    labelFormatter={(ts) => formatDateTime(ts)}
+                    labelFormatter={(ts) => {
+                      const date = new Date(ts);
+                      return date.toLocaleString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false 
+                      });
+                    }}
                     formatter={(value) => [`${value?.toFixed(1)} hPa`, 'Pressure']}
                   />
                   <Legend />
@@ -299,11 +325,24 @@ function GraphsContent() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="timestamp" 
-                      tickFormatter={(ts) => new Date(ts).toLocaleTimeString()}
+                      tickFormatter={(ts) => {
+                        const date = new Date(ts);
+                        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                      }}
                     />
                     <YAxis />
                     <Tooltip 
-                      labelFormatter={(ts) => formatDateTime(ts)}
+                      labelFormatter={(ts) => {
+                        const date = new Date(ts);
+                        return date.toLocaleString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric',
+                          hour: '2-digit', 
+                          minute: '2-digit',
+                          hour12: false 
+                        });
+                      }}
                       formatter={(value) => [`${value?.toFixed(1)}%`, 'Humidity']}
                     />
                     <Legend />
@@ -322,11 +361,24 @@ function GraphsContent() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="timestamp" 
-                      tickFormatter={(ts) => new Date(ts).toLocaleTimeString()}
+                      tickFormatter={(ts) => {
+                        const date = new Date(ts);
+                        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                      }}
                     />
                     <YAxis />
                     <Tooltip 
-                      labelFormatter={(ts) => formatDateTime(ts)}
+                      labelFormatter={(ts) => {
+                        const date = new Date(ts);
+                        return date.toLocaleString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric',
+                          hour: '2-digit', 
+                          minute: '2-digit',
+                          hour12: false 
+                        });
+                      }}
                       formatter={(value) => [`${value} dBm`, 'RSSI']}
                     />
                     <Legend />
