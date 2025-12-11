@@ -348,7 +348,7 @@ export default function ManualPrediction() {
                 <div className="text-center py-12">
                   <Cloud className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <p className="text-gray-500 dark:text-gray-400">
-                    Enter weather parameters and click "Predict Cloudburst" to
+                    Enter weather parameters and click &quot;Predict Cloudburst&quot; to
                     see results
                   </p>
                 </div>
