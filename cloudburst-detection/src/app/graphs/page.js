@@ -8,11 +8,13 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { formatDateTime } from '@/lib/utils';
 import { TrendingUp, Calendar, Download } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useTranslations } from 'next-intl';
 
 // Force dynamic rendering because we use useSearchParams and client-side libraries
 export const dynamic = 'force-dynamic';
 
 function GraphsContent() {
+  const t = useTranslations("graphs");
   const searchParams = useSearchParams();
   const nodeParam = searchParams.get('node');
 
@@ -118,7 +120,7 @@ function GraphsContent() {
       <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading data...</p>
+          <p className="text-gray-600 dark:text-gray-400">{t("loading")}</p>
         </div>
       </div>
     );
@@ -131,9 +133,9 @@ function GraphsContent() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Historical Data & Graphs</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("title")}</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Analyze sensor trends over time
+              {t("subtitle")}
             </p>
           </div>
           <button
@@ -142,7 +144,7 @@ function GraphsContent() {
             className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             <Download className="h-5 w-5" />
-            Export CSV
+            {t("exportCSV")}
           </button>
         </div>
 
@@ -151,7 +153,7 @@ function GraphsContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                Select Node
+                {t("selectNode")}
               </label>
               <select
                 value={selectedNode}
@@ -168,17 +170,17 @@ function GraphsContent() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                Time Range
+                {t("timeRange")}
               </label>
               <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
                 className="input-field"
               >
-                <option value="1h">Last 1 Hour</option>
-                <option value="6h">Last 6 Hours</option>
-                <option value="24h">Last 24 Hours</option>
-                <option value="7d">Last 7 Days</option>
+                <option value="1h">{t("last1Hour")}</option>
+                <option value="6h">{t("last6Hours")}</option>
+                <option value="24h">{t("last24Hours")}</option>
+                <option value="7d">{t("last7Days")}</option>
               </select>
             </div>
           </div>
@@ -190,7 +192,7 @@ function GraphsContent() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Temperature</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t("temperature")}</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {currentData.temperature?.toFixed(1)}°C
                   </p>
@@ -204,7 +206,7 @@ function GraphsContent() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Pressure</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t("pressure")}</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {currentData.pressure?.toFixed(1)} hPa
                   </p>
@@ -218,7 +220,7 @@ function GraphsContent() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Humidity</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t("humidity")}</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {currentData.humidity?.toFixed(1)}%
                   </p>
@@ -231,7 +233,7 @@ function GraphsContent() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Data Points</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t("dataPoints")}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {historicalData.length}
                 </p>
@@ -244,13 +246,13 @@ function GraphsContent() {
         {/* Charts */}
         {historicalData.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center text-gray-500 dark:text-gray-400">
-            No historical data available for selected time range
+            {t("noData")}
           </div>
         ) : (
           <div className="space-y-6">
             {/* Temperature Chart */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Temperature Over Time</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t("temperatureOverTime")}</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={historicalData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -274,17 +276,17 @@ function GraphsContent() {
                         hour12: false 
                       });
                     }}
-                    formatter={(value) => [`${value?.toFixed(1)}°C`, 'Temperature']}
+                    formatter={(value) => [`${value?.toFixed(1)}°C`, t("temperature")]}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="temperature" stroke="#3b82f6" name="Temperature (°C)" />
+                  <Line type="monotone" dataKey="temperature" stroke="#3b82f6" name={t("temperatureUnit")} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
 
             {/* Pressure Chart */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pressure Over Time</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t("pressureOverTime")}</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={historicalData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -308,10 +310,10 @@ function GraphsContent() {
                         hour12: false 
                       });
                     }}
-                    formatter={(value) => [`${value?.toFixed(1)} hPa`, 'Pressure']}
+                    formatter={(value) => [`${value?.toFixed(1)} hPa`, t("pressure")]}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="pressure" stroke="#10b981" name="Pressure (hPa)" />
+                  <Line type="monotone" dataKey="pressure" stroke="#10b981" name={t("pressureUnit")} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -319,7 +321,7 @@ function GraphsContent() {
             {/* Humidity Chart (if available) */}
             {historicalData.some(d => d.humidity !== undefined && d.humidity !== null) && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Humidity Over Time</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t("humidityOverTime")}</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={historicalData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -343,10 +345,10 @@ function GraphsContent() {
                           hour12: false 
                         });
                       }}
-                      formatter={(value) => [`${value?.toFixed(1)}%`, 'Humidity']}
+                      formatter={(value) => [`${value?.toFixed(1)}%`, t("humidity")]}
                     />
                     <Legend />
-                    <Line type="monotone" dataKey="humidity" stroke="#8b5cf6" name="Humidity (%)" />
+                    <Line type="monotone" dataKey="humidity" stroke="#8b5cf6" name={t("humidityUnit")} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -355,7 +357,7 @@ function GraphsContent() {
             {/* RSSI Chart (for nodes) */}
             {historicalData.some(d => d.rssi !== undefined && d.rssi !== null) && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Signal Strength (RSSI) Over Time</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t("rssiOverTime")}</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={historicalData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -379,10 +381,10 @@ function GraphsContent() {
                           hour12: false 
                         });
                       }}
-                      formatter={(value) => [`${value} dBm`, 'RSSI']}
+                      formatter={(value) => [`${value} dBm`, t("rssi")]}
                     />
                     <Legend />
-                    <Line type="monotone" dataKey="rssi" stroke="#ef4444" name="RSSI (dBm)" />
+                    <Line type="monotone" dataKey="rssi" stroke="#ef4444" name={t("rssiUnit")} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

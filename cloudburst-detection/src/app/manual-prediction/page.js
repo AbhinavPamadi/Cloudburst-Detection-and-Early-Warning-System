@@ -13,8 +13,10 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function ManualPrediction() {
+  const t = useTranslations("manualPrediction");
   const [formData, setFormData] = useState({
     temperature: "",
     humidity: "",
@@ -66,7 +68,7 @@ export default function ManualPrediction() {
 
       setPrediction(data);
     } catch (err) {
-      setError(err.message || "An error occurred while predicting");
+      setError(err.message || t("error"));
       console.error("Prediction error:", err);
     } finally {
       setLoading(false);
@@ -128,10 +130,10 @@ export default function ManualPrediction() {
             </div>
             <div>
               <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                Manual Cloudburst Prediction
+                {t("title")}
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Enter weather parameters to predict cloudburst probability
+                {t("subtitle")}
               </p>
             </div>
           </div>
@@ -146,7 +148,7 @@ export default function ManualPrediction() {
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <Thermometer className="h-5 w-5 text-red-500" />
-                    Temperature (°C)
+                    {t("temperature")}
                   </label>
                   <input
                     type="number"
@@ -164,7 +166,7 @@ export default function ManualPrediction() {
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <Droplets className="h-5 w-5 text-blue-500" />
-                    Humidity (%)
+                    {t("humidity")}
                   </label>
                   <input
                     type="number"
@@ -184,7 +186,7 @@ export default function ManualPrediction() {
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <Cloud className="h-5 w-5 text-cyan-500" />
-                    Precipitation Rate (mm/hr)
+                    {t("precipitationRate")}
                   </label>
                   <input
                     type="number"
@@ -203,7 +205,7 @@ export default function ManualPrediction() {
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <Droplets className="h-5 w-5 text-indigo-500" />
-                    TCWV - Total Column Water Vapor (kg/m²)
+                    {t("tcwv")}
                   </label>
                   <input
                     type="number"
@@ -222,7 +224,7 @@ export default function ManualPrediction() {
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <Wind className="h-5 w-5 text-purple-500" />
-                    CAPE - Convective Available Potential Energy (J/kg)
+                    {t("cape")}
                   </label>
                   <input
                     type="number"
@@ -241,7 +243,7 @@ export default function ManualPrediction() {
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <Gauge className="h-5 w-5 text-orange-500" />
-                    Atmospheric Pressure (hPa)
+                    {t("pressure")}
                   </label>
                   <input
                     type="number"
@@ -260,7 +262,7 @@ export default function ManualPrediction() {
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <Wind className="h-5 w-5 text-gray-500" />
-                    Wind Speed (km/h)
+                    {t("windSpeed")}
                   </label>
                   <input
                     type="number"
@@ -279,14 +281,14 @@ export default function ManualPrediction() {
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <Wind className="h-5 w-5 text-gray-500" />
-                    Wind Direction (degrees)
+                    {t("windDirection")}
                   </label>
                   <input
                     type="number"
                     name="windDirection"
                     value={formData.windDirection}
                     onChange={handleInputChange}
-                    placeholder="e.g., 180 (0=N, 90=E, 180=S, 270=W)"
+                    placeholder={t("windDirectionHint")}
                     min="0"
                     max="360"
                     step="1"
@@ -315,12 +317,12 @@ export default function ManualPrediction() {
                     {loading ? (
                       <>
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        Predicting...
+                        {t("predicting")}
                       </>
                     ) : (
                       <>
                         <Sparkles className="h-5 w-5" />
-                        Predict Cloudburst
+                        {t("predictButton")}
                       </>
                     )}
                   </button>
@@ -330,7 +332,7 @@ export default function ManualPrediction() {
                     disabled={loading}
                     className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Reset
+                    {t("reset")}
                   </button>
                 </div>
               </form>
@@ -341,15 +343,14 @@ export default function ManualPrediction() {
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 sticky top-8">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                Prediction Result
+                {t("predictionResult")}
               </h2>
 
               {!prediction && !loading && (
                 <div className="text-center py-12">
                   <Cloud className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <p className="text-gray-500 dark:text-gray-400">
-                    Enter weather parameters and click &quot;Predict Cloudburst&quot; to
-                    see results
+                    {t("enterParams")}
                   </p>
                 </div>
               )}
@@ -358,7 +359,7 @@ export default function ManualPrediction() {
                 <div className="text-center py-12">
                   <Loader2 className="h-16 w-16 text-blue-600 dark:text-blue-400 mx-auto mb-4 animate-spin" />
                   <p className="text-gray-600 dark:text-gray-400">
-                    Analyzing weather data...
+                    {t("analyzing")}
                   </p>
                 </div>
               )}
@@ -373,7 +374,7 @@ export default function ManualPrediction() {
                   >
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Cloudburst Prediction
+                        {t("cloudburstPrediction")}
                       </h3>
                       {prediction.isCloudburst ? (
                         <XCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
@@ -388,7 +389,7 @@ export default function ManualPrediction() {
                           getRiskLevel(prediction.probability).textColor
                         }`}
                       >
-                        {prediction.isCloudburst ? "YES" : "NO"}
+                        {prediction.isCloudburst ? t("yes") : t("no")}
                       </div>
                       <div className="flex items-center justify-center gap-2">
                         <span
@@ -410,7 +411,7 @@ export default function ManualPrediction() {
                     {/* Probability Bar */}
                     <div className="mb-4">
                       <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        <span>Probability</span>
+                        <span>{t("probability")}</span>
                         <span className="font-semibold">
                           {(prediction.probability * 100).toFixed(1)}%
                         </span>
@@ -435,7 +436,7 @@ export default function ManualPrediction() {
 
                     {prediction.confidence && (
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        <span className="font-medium">Model Confidence:</span>{" "}
+                        <span className="font-medium">{t("modelConfidence")}:</span>{" "}
                         {(prediction.confidence * 100).toFixed(1)}%
                       </div>
                     )}
@@ -448,11 +449,10 @@ export default function ManualPrediction() {
                         <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="text-sm font-semibold text-red-900 dark:text-red-200">
-                            High Risk Alert
+                            {t("highRiskAlert")}
                           </p>
                           <p className="text-xs text-red-700 dark:text-red-300 mt-1">
-                            Cloudburst conditions detected. Take necessary
-                            precautions and monitor weather updates closely.
+                            {t("highRiskMessage")}
                           </p>
                         </div>
                       </div>
@@ -462,12 +462,12 @@ export default function ManualPrediction() {
                   {/* Input Summary */}
                   <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                      Input Summary
+                      {t("inputSummary")}
                     </h4>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">
-                          Temp:
+                          {t("temp")}:
                         </span>{" "}
                         <span className="font-medium text-gray-900 dark:text-white">
                           {formData.temperature}°C
@@ -483,7 +483,7 @@ export default function ManualPrediction() {
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">
-                          Precip:
+                          {t("precip")}:
                         </span>{" "}
                         <span className="font-medium text-gray-900 dark:text-white">
                           {formData.precipitationRate} mm/hr

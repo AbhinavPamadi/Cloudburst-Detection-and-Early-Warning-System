@@ -9,6 +9,7 @@ import {
   getOrCreateOAuthUser,
 } from "@/features/auth/authService";
 import { auth, GoogleAuthProvider, signInWithPopup } from "@/lib/firebase";
+import { useTranslations } from "next-intl";
 
 function GoogleIcon({ className = "h-4 w-4" }) {
   return (
@@ -42,6 +43,7 @@ function GoogleIcon({ className = "h-4 w-4" }) {
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { saveUserToStorage } = useAuth();
@@ -66,7 +68,7 @@ export default function LoginPage() {
         router.replace("/home");
       }
     } catch (err) {
-      setError(err.message || "Login failed");
+      setError(err.message || t("loginFailed"));
     } finally {
       setLoading(false);
     }
@@ -80,10 +82,10 @@ export default function LoginPage() {
             <User className="h-6 w-6" aria-hidden="true" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Sign in to Cloudburst
+            {t("signIn")}
           </h1>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Sign in with Google or use email + password.
+            {t("signInSubtitle")}
           </p>
         </div>
 
@@ -104,7 +106,7 @@ export default function LoginPage() {
         >
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
-              Email
+              {t("email")}
             </label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -122,7 +124,7 @@ export default function LoginPage() {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
-              Password
+              {t("password")}
             </label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -159,7 +161,7 @@ export default function LoginPage() {
                   router.replace("/home");
                 } catch (err) {
                   console.error("Google sign-in failed", err);
-                  setError(err?.message || "Google sign-in failed");
+                  setError(err?.message || t("loginFailed"));
                 } finally {
                   setLoading(false);
                 }
@@ -167,7 +169,7 @@ export default function LoginPage() {
               className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200"
             >
               <GoogleIcon className="h-4 w-4" />
-              Sign in with Google
+              {t("signInWithGoogle")}
             </button>
           </div>
 
@@ -176,18 +178,18 @@ export default function LoginPage() {
             disabled={loading}
             className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
           >
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? t("signingIn") : t("signInButton")}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Don&apos;t have an account?{" "}
+            {t("dontHaveAccount")}{" "}
             <a
               href="/signup"
               className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
             >
-              Sign up
+              {t("signUpLink")}
             </a>
           </p>
         </div>

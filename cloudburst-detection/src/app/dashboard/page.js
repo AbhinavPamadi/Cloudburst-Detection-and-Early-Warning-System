@@ -20,6 +20,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import classNames from "@/utils/classNames";
+import { useTranslations } from "next-intl";
 
 const DashboardMap = dynamic(() => import("@/components/DashboardMap"), {
   ssr: false,
@@ -60,6 +61,7 @@ function formatTimeAgo(timestamp) {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations("dashboard");
   const [nodes, setNodes] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [mapExpanded, setMapExpanded] = useState(false);
@@ -72,33 +74,47 @@ export default function DashboardPage() {
       nodesRef,
       (snapshot) => {
         try {
-          const data = snapshot.val() || {};
-          const allNodes = Object.entries(data);
+      const data = snapshot.val() || {};
+      const allNodes = Object.entries(data);
 
-          const valid = [];
-          allNodes.forEach(([nodeId, node]) => {
-            if (!node.metadata) return;
-            const { latitude, longitude } = node.metadata;
-            if (
-              latitude === undefined ||
-              longitude === undefined ||
-              isNaN(latitude) ||
-              isNaN(longitude)
-            ) {
-              return;
-            }
-            if (
-              latitude < -90 ||
-              latitude > 90 ||
-              longitude < -180 ||
-              longitude > 180
-            ) {
-              return;
-            }
-            valid.push({ id: nodeId, ...node });
-          });
+      const parsedNodes = [];
+      allNodes.forEach(([nodeId, node]) => {
+        if (!node.metadata) return;
 
-          setNodes(valid);
+        // Accept latitude/longitude from either latitude/longitude or lat/lng keys
+        const rawLat =
+          node.metadata.latitude ?? node.metadata.lat ?? node.metadata.Latitude;
+        const rawLon =
+          node.metadata.longitude ?? node.metadata.lng ?? node.metadata.Longitude;
+
+        const latNum =
+          rawLat === undefined || rawLat === null ? null : parseFloat(rawLat);
+        const lonNum =
+          rawLon === undefined || rawLon === null ? null : parseFloat(rawLon);
+
+        const hasValidCoordinates =
+          Number.isFinite(latNum) &&
+          Number.isFinite(lonNum) &&
+          latNum >= -90 &&
+          latNum <= 90 &&
+          lonNum >= -180 &&
+          lonNum <= 180;
+
+        // Always include the node so it appears in lists/metrics, even if coordinates are missing.
+        // Map rendering will filter out nodes without valid coordinates.
+        parsedNodes.push({
+          id: nodeId,
+          ...node,
+          metadata: {
+            ...node.metadata,
+            latitude: latNum,
+            longitude: lonNum,
+          },
+          hasValidCoordinates,
+        });
+      });
+
+      setNodes(parsedNodes);
           setError(null);
         } catch (err) {
           console.error(err);
@@ -153,7 +169,7 @@ export default function DashboardPage() {
         <div className="text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-b-4 border-blue-600 dark:border-blue-500" />
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Loading dashboard…
+            {t("loading")}
           </p>
         </div>
       </div>
@@ -166,7 +182,7 @@ export default function DashboardPage() {
         <div className="max-w-md text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-red-500" />
           <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-gray-100">
-            Error loading dashboard
+            {t("error")}
           </h2>
           <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
             {error}
@@ -176,7 +192,7 @@ export default function DashboardPage() {
             onClick={() => window.location.reload()}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
           >
-            Retry
+            {t("retry")}
           </button>
         </div>
       </div>
@@ -189,17 +205,16 @@ export default function DashboardPage() {
         <div className="max-w-md text-center">
           <MapPin className="mx-auto mb-4 h-16 w-16 text-gray-400 dark:text-gray-500" />
           <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
-            No Nodes Registered
+            {t("noNodes")}
           </h2>
           <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
-            Register your first sensor node to start monitoring weather
-            conditions and detecting cloudbursts.
+            {t("registerFirst")}
           </p>
           <a
             href="/register"
             className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
           >
-            Register First Node
+            {t("registerFirstButton")}
           </a>
         </div>
       </div>
@@ -211,15 +226,15 @@ export default function DashboardPage() {
   const MapPanel = (
     <div className="relative flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg ring-1 ring-black/10 dark:from-slate-800 dark:to-slate-900">
       <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-white/10 text-white">
-            <MapPinned className="h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-white/10 text-white">
+              <MapPinned className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-white">{t("liveFloodMap")}</h3>
+              <p className="text-xs text-sky-100/80">{t("liveView")}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-white">Live Flood Map</h3>
-            <p className="text-xs text-sky-100/80">Live view of active nodes</p>
-          </div>
-        </div>
 
         <button
           type="button"
@@ -228,13 +243,14 @@ export default function DashboardPage() {
           aria-label="Expand map"
         >
           <ArrowUpRight className="h-4 w-4" />
-          <span>Expand</span>
+          <span>{t("expand")}</span>
         </button>
       </div>
 
       <div className="h-80 md:h-[420px]">
         <DashboardMap
-          nodes={nodes}
+          // Show only nodes that have valid coordinates on the map
+          nodes={nodes.filter((n) => n.hasValidCoordinates)}
           selectedNode={selectedNode}
           setSelectedNode={setSelectedNode}
           getNodeStatus={getNodeStatus}
@@ -254,23 +270,26 @@ export default function DashboardPage() {
     <div className="flex h-[420px] flex-col overflow-hidden rounded-2xl bg-white p-0 shadow-lg ring-1 ring-black/5 dark:bg-gray-800/60 dark:ring-black/10">
       <div className="px-5 py-4 border-b border-gray-200 dark:border-white/6">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          Active Sensors
+          {t("activeSensors")}
         </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Live overview of sensor status
+          {t("liveOverview")}
         </p>
       </div>
 
       <ul className="flex-1 divide-y divide-gray-200 overflow-y-auto p-4 dark:divide-white/6">
-        {activeNodes.map((node) => {
+        {nodes.map((node) => {
           const lastUpdateMs =
             typeof node.realtime.lastUpdate === "string"
               ? parseInt(node.realtime.lastUpdate, 10) * 1000
               : node.realtime.lastUpdate;
           const isSelected =
-            selectedNode?.metadata?.nodeId === node.metadata.nodeId;
+            selectedNode?.metadata?.nodeId === node.metadata?.nodeId || selectedNode?.id === node.id;
           return (
-            <li key={node.metadata.nodeId} className="py-2">
+            <li
+              key={node.id || node.metadata?.nodeId || node.metadata?.name || `node-${node.metadata?.nodeId || 'unknown'}`}
+              className="py-2"
+            >
               <button
                 type="button"
                 onClick={() => setSelectedNode(node)}
@@ -308,10 +327,10 @@ export default function DashboardPage() {
     <div className="flex h-[320px] flex-col overflow-hidden rounded-2xl bg-white p-0 shadow-lg ring-1 ring-black/5 dark:bg-gray-800/60 dark:ring-black/10">
       <div className="px-5 py-4 border-b border-gray-200 dark:border-white/6">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          Prediction Panel
+          {t("predictionPanel")}
         </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          AI + manual insights
+          {t("aiInsights")}
         </p>
       </div>
 
@@ -352,10 +371,10 @@ export default function DashboardPage() {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            Network Stats
+            {t("networkStats")}
           </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Updated every 5 minutes
+            {t("updatedEvery")}
           </p>
         </div>
         <Activity
@@ -366,12 +385,12 @@ export default function DashboardPage() {
 
       <div className="grid flex-1 grid-cols-2 gap-4">
         <MetricCard
-          label="Uptime"
+          label={t("uptime")}
           value={`${(Math.random() * (99 - 96) + 96).toFixed(1)}%`}
         />
-        <MetricCard label="Predicted events" value={3} />
-        <MetricCard label="Total Nodes" value={metrics.totalNodes} />
-        <MetricCard label="Active Alerts" value={metrics.activeAlerts} />
+        <MetricCard label={t("predictedEvents")} value={3} />
+        <MetricCard label={t("totalNodes")} value={metrics.totalNodes} />
+        <MetricCard label={t("activeAlerts")} value={metrics.activeAlerts} />
       </div>
     </section>
   );
@@ -384,10 +403,10 @@ export default function DashboardPage() {
         <header className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Dashboard
+              {t("title")}
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Real-time view of active sensor nodes and network status.
+              {t("subtitle")}
             </p>
           </div>
         </header>
@@ -417,7 +436,7 @@ export default function DashboardPage() {
                     <MapPinned className="h-4 w-4" />
                   </div>
                   <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                    Map – Fullscreen
+                    {t("mapFullscreen")}
                   </h2>
                 </div>
                 <button
@@ -425,7 +444,7 @@ export default function DashboardPage() {
                   onClick={() => setMapExpanded(false)}
                   className="rounded-md px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-white/6"
                 >
-                  Close
+                  {t("close")}
                 </button>
               </div>
               <div className="flex-1">

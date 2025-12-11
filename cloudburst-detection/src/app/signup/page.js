@@ -10,6 +10,7 @@ import {
   getOrCreateOAuthUser,
 } from "@/features/auth/authService";
 import { auth, GoogleAuthProvider, signInWithPopup } from "@/lib/firebase";
+import { useTranslations } from "next-intl";
 
 function GoogleIcon({ className = "h-4 w-4" }) {
   return (
@@ -42,6 +43,7 @@ function GoogleIcon({ className = "h-4 w-4" }) {
 
 export default function SignupPage() {
   const router = useRouter();
+  const t = useTranslations("auth");
   const { saveUserToStorage } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -88,7 +90,7 @@ export default function SignupPage() {
         router.replace("/home");
       }, 1500);
     } catch (err) {
-      setError(err.message || "Signup failed");
+      setError(err.message || t("signupFailed"));
     } finally {
       setLoading(false);
     }
@@ -102,10 +104,10 @@ export default function SignupPage() {
             <User className="h-6 w-6" aria-hidden="true" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Create Account
+            {t("createAccount")}
           </h1>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Sign up to join the Cloudburst Detection System.
+            {t("signUp")}
           </p>
         </div>
 
@@ -132,7 +134,7 @@ export default function SignupPage() {
         >
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
-              Email Address
+              {t("email")}
             </label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -150,7 +152,7 @@ export default function SignupPage() {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
-              Password
+              {t("password")}
             </label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -189,13 +191,13 @@ export default function SignupPage() {
             disabled={loading}
             className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
           >
-            {loading ? "Creating Account…" : "Sign Up"}
+            {loading ? t("creatingAccount") : t("signUpButton")}
           </button>
         </form>
 
         <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
           <p className="mb-3 text-center text-xs text-gray-600 dark:text-gray-400">
-            Or sign up with
+            {t("orSignUpWith")}
           </p>
           <button
             type="button"
@@ -216,7 +218,7 @@ export default function SignupPage() {
                 router.replace("/home");
               } catch (err) {
                 console.error("Google signup failed", err);
-                setError(err?.message || "Google signup failed");
+                setError(err?.message || t("signupFailed"));
               } finally {
                 setLoading(false);
               }
@@ -224,18 +226,18 @@ export default function SignupPage() {
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
           >
             <GoogleIcon className="h-4 w-4" />
-            Sign up with Google
+            {t("signUpWithGoogle")}
           </button>
         </div>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Already have an account?{" "}
+            {t("alreadyHaveAccount")}{" "}
             <Link
               href="/login"
               className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
             >
-              Sign in
+              {t("signInLink")}
             </Link>
           </p>
         </div>
