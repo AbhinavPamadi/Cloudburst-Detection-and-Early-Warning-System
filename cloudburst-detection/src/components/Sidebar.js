@@ -27,6 +27,7 @@ import {
   Menu,
   Home,
   CloudRain,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { Roles } from "@/features/auth/authService";
@@ -35,7 +36,7 @@ import React from "react";
 
 const NAV_ITEMS = [
   {
-    href: "/",
+    href: "/home",
     label: "Home",
     icon: Home,
     roles: [Roles.ADMIN, Roles.NODE_REGISTRAR, Roles.USER],
@@ -68,6 +69,12 @@ const NAV_ITEMS = [
     href: "/prediction",
     label: "Predictions",
     icon: TrendingUp,
+    roles: [Roles.ADMIN, Roles.NODE_REGISTRAR, Roles.USER],
+  },
+  {
+    href: "/manual-prediction",
+    label: "Manual Prediction",
+    icon: Sparkles,
     roles: [Roles.ADMIN, Roles.NODE_REGISTRAR, Roles.USER],
   },
   {
