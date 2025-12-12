@@ -225,5 +225,12 @@
     "refresh": "রিফ্রেশ",
     "lightMode": "লাইট মোড",
     "darkMode": "ডার্ক মোড"
+  },
+  "eventsTimeline": {
+    "title": "Cloudburst Events Timeline",
+    "subtitle": "Compare model predictions vs actual cloudburst occurrences",
+    "selectEvent": "Select Event",
+    "timelineChartTitle": "Hour-by-Hour Timeline Visualization",
+    "detailedListTitle": "Detailed Hour-by-Hour Timeline"
   }
 }
