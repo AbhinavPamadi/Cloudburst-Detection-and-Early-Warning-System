@@ -28,6 +28,7 @@ import {
   Home,
   CloudRain,
   Sparkles,
+  Calendar,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { Roles } from "@/features/auth/authService";
@@ -69,6 +70,12 @@ const NAV_ITEMS = [
     href: "/prediction",
     label: "Predictions",
     icon: TrendingUp,
+    roles: [Roles.ADMIN, Roles.SUPER_ADMIN, Roles.NODE_REGISTRAR, Roles.USER],
+  },
+  {
+    href: "/events-timeline",
+    label: "Events Timeline",
+    icon: Calendar,
     roles: [Roles.ADMIN, Roles.SUPER_ADMIN, Roles.NODE_REGISTRAR, Roles.USER],
   },
   {

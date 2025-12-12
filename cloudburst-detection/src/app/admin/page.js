@@ -118,7 +118,24 @@ export default function AnalyticalPanel() {
     const nodesRef = ref(database, 'nodes');
     const unsubscribeNodes = onValue(nodesRef, (snapshot) => {
       const data = snapshot.val() || {};
-      setNodes(data);
+      // Ensure all nodes have realtime structure initialized
+      const processedNodes = {};
+      Object.entries(data).forEach(([nodeId, node]) => {
+        processedNodes[nodeId] = {
+          ...node,
+          realtime: node.realtime || {
+            temperature: null,
+            pressure: null,
+            altitude: null,
+            humidity: null,
+            rssi: null,
+            windSpeed: 0,
+            status: "offline",
+            lastUpdate: null,
+          },
+        };
+      });
+      setNodes(processedNodes);
     });
 
     // Load alerts

@@ -20,6 +20,7 @@ export default function Navbar() {
     { href: "/home", label: t("home") },
     { href: "/dashboard", label: t("dashboard") },
     { href: "/prediction", label: t("prediction") },
+    { href: "/events-timeline", label: "Events Timeline" },
     { href: "/register", label: t("register") },
     { href: "/contacts", label: t("contacts") },
     { href: "/alerts", label: t("alerts") },

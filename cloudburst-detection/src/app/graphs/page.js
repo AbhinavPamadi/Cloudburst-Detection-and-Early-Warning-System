@@ -154,14 +154,27 @@ function GraphsContent() {
               {t("subtitle")}
             </p>
           </div>
-          <button
-            onClick={handleExportCSV}
-            disabled={historicalData.length === 0}
-            className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
-          >
-            <Download className="h-5 w-5" />
-            {t("exportCSV")}
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Cloudburst Prediction - Button Style */}
+            {prediction && (
+              <button className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-md transition-all hover:shadow-lg ${
+                prediction.willOccur 
+                  ? 'bg-red-500 hover:bg-red-600' 
+                  : 'bg-green-500 hover:bg-green-600'
+              } text-white text-sm font-semibold`}>
+                <AlertTriangle className="h-4 w-4" />
+                <span>{prediction.willOccur ? 'Yes' : 'No'}</span>
+              </button>
+            )}
+            <button
+              onClick={handleExportCSV}
+              disabled={historicalData.length === 0}
+              className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              <Download className="h-5 w-5" />
+              {t("exportCSV")}
+            </button>
+          </div>
         </div>
 
         {/* Controls */}
@@ -202,41 +215,8 @@ function GraphsContent() {
           </div>
         </div>
 
-        {/* Current Stats with Prediction */}
-        <div className="relative mb-6">
-          {/* Cloudburst Prediction Probability - Top Right */}
-          {prediction && (
-            <div className="absolute top-0 right-0 z-10">
-              <div className={`bg-gradient-to-br ${
-                prediction.riskColor === 'red' ? 'from-red-500 to-red-600' :
-                prediction.riskColor === 'orange' ? 'from-orange-500 to-orange-600' :
-                prediction.riskColor === 'yellow' ? 'from-yellow-500 to-yellow-600' :
-                'from-green-500 to-green-600'
-              } text-white rounded-lg shadow-lg p-4 min-w-[200px]`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="h-5 w-5" />
-                  <h3 className="text-sm font-semibold">Cloudburst Prediction</h3>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold mb-1">
-                    {prediction.probability}%
-                  </div>
-                  <div className="text-xs opacity-90 mb-2">
-                    {getRiskDescription(prediction.riskLevel)}
-                  </div>
-                  <div className={`text-xs px-2 py-1 rounded ${
-                    prediction.willOccur 
-                      ? 'bg-red-700/50' 
-                      : 'bg-green-700/50'
-                  }`}>
-                    {prediction.willOccur ? '⚠️ Cloudburst Likely' : '✓ Low Risk'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Current Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           {currentData.temperature !== undefined && (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
               <div className="flex items-center justify-between">
@@ -301,7 +281,6 @@ function GraphsContent() {
               </div>
               <Calendar className="h-8 w-8 text-orange-600 dark:text-orange-400" />
             </div>
-          </div>
           </div>
         </div>
 
