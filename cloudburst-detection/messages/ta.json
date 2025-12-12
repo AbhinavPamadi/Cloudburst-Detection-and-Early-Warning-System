@@ -225,12 +225,5 @@
     "refresh": "புதுப்பிக்கவும்",
     "lightMode": "ஒளி பயன்முறை",
     "darkMode": "இருள் பயன்முறை"
-  },
-  "eventsTimeline": {
-    "title": "Cloudburst Events Timeline",
-    "subtitle": "Compare model predictions vs actual cloudburst occurrences",
-    "selectEvent": "Select Event",
-    "timelineChartTitle": "Hour-by-Hour Timeline Visualization",
-    "detailedListTitle": "Detailed Hour-by-Hour Timeline"
   }
 }

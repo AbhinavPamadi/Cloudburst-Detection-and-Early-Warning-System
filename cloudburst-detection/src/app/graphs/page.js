@@ -70,12 +70,7 @@ function GraphsContent() {
           pressure: values.pressure,
           altitude: values.altitude,
           humidity: values.humidity,
-          // Support legacy "rainfall" or new "rain_total" fields (mm/hr)
-          rainfall: values.rain_total !== undefined && values.rain_total !== null
-            ? parseFloat(values.rain_total)
-            : values.rainfall !== undefined && values.rainfall !== null
-              ? parseFloat(values.rainfall)
-              : 0,
+          rainfall: values.rainfall,
           rssi: values.rssi,
           windSpeed: values.windSpeed !== undefined && values.windSpeed !== null ? parseFloat(values.windSpeed) : 0
         };
@@ -114,7 +109,7 @@ function GraphsContent() {
   const handleExportCSV = () => {
     if (historicalData.length === 0) return;
 
-    const headers = ['Timestamp', 'Temperature', 'Pressure', 'Altitude', 'Humidity', 'Rainfall', 'RSSI', 'Wind Speed'];
+    const headers = ['Timestamp', 'Temperature', 'Pressure', 'Altitude', 'Humidity', 'RSSI', 'Wind Speed'];
     const csvContent = [
       headers.join(','),
       ...historicalData.map(d => [
@@ -123,7 +118,6 @@ function GraphsContent() {
         d.pressure || '',
         d.altitude || '',
         d.humidity || '',
-        d.rainfall || '',
         d.rssi || '',
         d.windSpeed || ''
       ].join(','))
@@ -149,13 +143,6 @@ function GraphsContent() {
   }
 
   const currentData = nodes[selectedNode]?.realtime || {};
-  // Rainfall from GroundStation realtime: nodes -> GroundStation -> realtime -> rain_total (mm/hr)
-  const rainfallNow = currentData.rain_total !== undefined && currentData.rain_total !== null
-    ? parseFloat(currentData.rain_total)
-    : currentData.rainfall !== undefined && currentData.rainfall !== null
-      ? parseFloat(currentData.rainfall)
-    : 0;
-  const rainfallAboveThreshold = rainfallNow > 20;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
@@ -169,14 +156,16 @@ function GraphsContent() {
           </div>
           <div className="flex items-center gap-3">
             {/* Cloudburst Prediction - Button Style */}
-            <button className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-md transition-all hover:shadow-lg ${
-              rainfallAboveThreshold
-                ? 'bg-red-500 hover:bg-red-600'
-                : 'bg-green-500 hover:bg-green-600'
-            } text-white text-sm font-semibold`}>
-              <AlertTriangle className="h-4 w-4" />
-              <span>{rainfallAboveThreshold ? 'Yes' : 'No'}</span>
-            </button>
+            {prediction && (
+              <button className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-md transition-all hover:shadow-lg ${
+                prediction.willOccur 
+                  ? 'bg-red-500 hover:bg-red-600' 
+                  : 'bg-green-500 hover:bg-green-600'
+              } text-white text-sm font-semibold`}>
+                <AlertTriangle className="h-4 w-4" />
+                <span>{prediction.willOccur ? 'Yes' : 'No'}</span>
+              </button>
+            )}
             <button
               onClick={handleExportCSV}
               disabled={historicalData.length === 0}
@@ -269,18 +258,6 @@ function GraphsContent() {
               </div>
             </div>
           )}
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Rainfall</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {rainfallNow.toFixed(1)} mm/hr
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-cyan-600 dark:text-cyan-400" />
-            </div>
-          </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
             <div className="flex items-center justify-between">
@@ -413,42 +390,6 @@ function GraphsContent() {
                     />
                     <Legend />
                     <Line type="monotone" dataKey="humidity" stroke="#8b5cf6" name={t("humidityUnit")} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-
-            {/* Rainfall Chart */}
-            {historicalData.some(d => d.rainfall !== undefined && d.rainfall !== null) && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Rainfall Over Time</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={historicalData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="timestamp"
-                      tickFormatter={(ts) => {
-                        const date = new Date(ts);
-                        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-                      }}
-                    />
-                    <YAxis />
-                    <Tooltip
-                      labelFormatter={(ts) => {
-                        const date = new Date(ts);
-                        return date.toLocaleString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: false
-                        });
-                      }}
-                      formatter={(value) => [`${(value || 0).toFixed(1)} mm/hr`, 'Rainfall']}
-                    />
-                    <Legend />
-                    <Line type="monotone" dataKey="rainfall" stroke="#06b6d4" name="Rainfall (mm/hr)" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

@@ -136,12 +136,11 @@ export function calculateCloudburstProbability(currentData, historicalData = [])
 
   // Factor 5: Rainfall (0-10 points)
   // Current rainfall intensity
-  // Adjusted: treat rainfall above 20 mm/hr as high risk
-  if (rainfall > 20) {
+  if (rainfall > 50) {
     factors.rainfall = 10;
-  } else if (rainfall > 15) {
+  } else if (rainfall > 30) {
     factors.rainfall = 7;
-  } else if (rainfall > 10) {
+  } else if (rainfall > 15) {
     factors.rainfall = 4;
   } else if (rainfall > 5) {
     factors.rainfall = 2;

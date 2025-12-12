@@ -7,6 +7,7 @@ import { database } from "@/lib/firebase";
 import NodeStatusBadge from "@/components/NodeStatusBadge";
 import ProtectedPage from "@/features/auth/ProtectedPage";
 import { Roles } from "@/features/auth/authService";
+import { getNodeStatus as getNodeStatusFromUtils } from "@/lib/utils";
 import {
   AlertCircle,
   ArrowUpRight,
@@ -23,6 +24,7 @@ import classNames from "@/utils/classNames";
 import { useTranslations } from "next-intl";
 import WindSpeedInput from "@/components/WindSpeedInput";
 import { useAuth } from "@/features/auth/AuthContext";
+import { checkAndUpdateNodeStatus, startNodeStatusMonitoring } from "@/utils/nodeStatusMonitor";
 
 const DashboardMap = dynamic(() => import("@/components/DashboardMap"), {
   ssr: false,
@@ -37,19 +39,23 @@ const DashboardMap = dynamic(() => import("@/components/DashboardMap"), {
 });
 
 function getNodeStatus(node) {
-  if (!node?.realtime || !node.realtime.lastUpdate) return "offline";
-
-  if (node.realtime.status === "offline") return "offline";
-  const lastUpdateMs =
-    typeof node.realtime.lastUpdate === "string"
-      ? parseInt(node.realtime.lastUpdate, 10) * 1000
-      : node.realtime.lastUpdate;
-
-  const now = Date.now();
-  const diff = now - lastUpdateMs;
-
-  if (diff < 5 * 60 * 1000) return "online";
-  if (diff < 15 * 60 * 1000) return "warning";
+  // Check if realtime data exists
+  if (!node?.realtime) {
+    return "offline";
+  }
+  
+  // Check status directly from Firebase realtime data (case-insensitive)
+  const firebaseStatus = node.realtime.status;
+  
+  if (firebaseStatus) {
+    const statusLower = String(firebaseStatus).toLowerCase();
+    // Green only if status is "active", "ONLINE", or "online" (case-insensitive)
+    if (statusLower === "active" || statusLower === "online") {
+      return "online";
+    }
+  }
+  
+  // Red for any other status or if status is missing
   return "offline";
 }
 
@@ -80,47 +86,50 @@ export default function DashboardPage() {
       nodesRef,
       (snapshot) => {
         try {
-      const data = snapshot.val() || {};
-      const allNodes = Object.entries(data);
+          const data = snapshot.val() || {};
+          const allNodes = Object.entries(data);
 
-      const parsedNodes = [];
-      allNodes.forEach(([nodeId, node]) => {
-        if (!node.metadata) return;
+          const parsedNodes = [];
+          allNodes.forEach(([nodeId, node]) => {
+            if (!node.metadata) return;
 
-        // Accept latitude/longitude from either latitude/longitude or lat/lng keys
-        const rawLat =
-          node.metadata.latitude ?? node.metadata.lat ?? node.metadata.Latitude;
-        const rawLon =
-          node.metadata.longitude ?? node.metadata.lng ?? node.metadata.Longitude;
+            // Accept latitude/longitude from either latitude/longitude or lat/lng keys
+            const rawLat =
+              node.metadata.latitude ?? node.metadata.lat ?? node.metadata.Latitude;
+            const rawLon =
+              node.metadata.longitude ?? node.metadata.lng ?? node.metadata.Longitude;
 
-        const latNum =
-          rawLat === undefined || rawLat === null ? null : parseFloat(rawLat);
-        const lonNum =
-          rawLon === undefined || rawLon === null ? null : parseFloat(rawLon);
+            const latNum =
+              rawLat === undefined || rawLat === null ? null : parseFloat(rawLat);
+            const lonNum =
+              rawLon === undefined || rawLon === null ? null : parseFloat(rawLon);
 
-        const hasValidCoordinates =
-          Number.isFinite(latNum) &&
-          Number.isFinite(lonNum) &&
-          latNum >= -90 &&
-          latNum <= 90 &&
-          lonNum >= -180 &&
-          lonNum <= 180;
+            const hasValidCoordinates =
+              Number.isFinite(latNum) &&
+              Number.isFinite(lonNum) &&
+              latNum >= -90 &&
+              latNum <= 90 &&
+              lonNum >= -180 &&
+              lonNum <= 180;
 
-        // Always include the node so it appears in lists/metrics, even if coordinates are missing.
-        // Map rendering will filter out nodes without valid coordinates.
-        parsedNodes.push({
-          id: nodeId,
-          ...node,
-          metadata: {
-            ...node.metadata,
-            latitude: latNum,
-            longitude: lonNum,
-          },
-          hasValidCoordinates,
-        });
-      });
+            // Preserve existing realtime data, don't overwrite it
+            // Always include the node so it appears in lists/metrics, even if coordinates are missing.
+            // Map rendering will filter out nodes without valid coordinates.
+            parsedNodes.push({
+              id: nodeId,
+              ...node,
+              // Explicitly preserve realtime data - don't let spread operator lose it
+              realtime: node.realtime,
+              metadata: {
+                ...node.metadata,
+                latitude: latNum,
+                longitude: lonNum,
+              },
+              hasValidCoordinates,
+            });
+          });
 
-      setNodes(parsedNodes);
+          setNodes(parsedNodes);
           setError(null);
         } catch (err) {
           console.error(err);
@@ -137,6 +146,19 @@ export default function DashboardPage() {
     );
 
     return () => unsubscribe();
+  }, []);
+
+  // Monitor node status and update to offline if hardware is off
+  useEffect(() => {
+    // Check immediately on mount
+    checkAndUpdateNodeStatus(15); // 15 minutes timeout
+
+    // Then check every 5 minutes
+    const intervalId = setInterval(() => {
+      checkAndUpdateNodeStatus(15);
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const activeNodes = useMemo(
@@ -285,10 +307,11 @@ export default function DashboardPage() {
 
       <ul className="flex-1 divide-y divide-gray-200 overflow-y-auto p-4 dark:divide-white/6">
         {nodes.map((node) => {
-          const lastUpdateMs =
-            typeof node.realtime.lastUpdate === "string"
-              ? parseInt(node.realtime.lastUpdate, 10) * 1000
-              : node.realtime.lastUpdate;
+          const lastUpdateMs = node.realtime?.lastUpdate
+            ? (typeof node.realtime.lastUpdate === "string"
+                ? parseInt(node.realtime.lastUpdate, 10) * 1000
+                : node.realtime.lastUpdate)
+            : null;
           const isSelected =
             selectedNode?.metadata?.nodeId === node.metadata?.nodeId || selectedNode?.id === node.id;
           return (

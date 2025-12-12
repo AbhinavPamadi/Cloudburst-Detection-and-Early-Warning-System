@@ -225,12 +225,5 @@
     "refresh": "रिफ्रेश",
     "lightMode": "लाइट मोड",
     "darkMode": "डार्क मोड"
-  },
-  "eventsTimeline": {
-    "title": "Cloudburst Events Timeline",
-    "subtitle": "Compare model predictions vs actual cloudburst occurrences",
-    "selectEvent": "Select Event",
-    "timelineChartTitle": "Hour-by-Hour Timeline Visualization",
-    "detailedListTitle": "Detailed Hour-by-Hour Timeline"
   }
 }
