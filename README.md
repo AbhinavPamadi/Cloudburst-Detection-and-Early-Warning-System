@@ -17,57 +17,9 @@ It leverages **low-cost, solar-powered IoT sensor nodes** connected via a **LoRa
 
 This system provides **hyperlocal weather insights**, **AI-based alerts**, and a **visual dashboard** for monitoring and decision-making — empowering both communities and authorities to respond proactively.
 
-**Live Demo:** [cloud-burst-detection-website.vercel.app](https://cloud-burst-detection-website.vercel.app/)  
+**Live Demo:** [https://cloudburst-detection-and-early-warn.vercel.app]([https://cloud-burst-detection-website.vercel.app/](https://cloudburst-detection-and-early-warn.vercel.app/))  
 **Video Demo:** [Watch on YouTube](https://youtu.be/a9X9CcYgAPU?si=Ea_TAWAwiaaR-COd)
 
----
-
-## System Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                       CLOUD-BURST DETECTION SYSTEM                   │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌──────────────────────┐        ┌──────────────────────┐
-│   SENSOR NODE 1      │        │   SENSOR NODE 2      │
-│  Arduino Nano        │        │  Arduino Nano        │
-│  + BMP280            │        │  + BMP280            │
-│  + LoRa Ra-02        │        │  + LoRa Ra-02        │
-└──────────┬───────────┘        └──────────┬───────────┘
-           │                               │
-           │    433 MHz LoRa Network      │
-           └───────────┬───────────────────┘
-                       ↓
-              ┌─────────────────┐
-              │  GATEWAY NODE   │
-              │  NodeMCU ESP8266│
-              │  + BME280       │
-              │  + LoRa Ra-02   │
-              │  + WiFi         │
-              └────────┬────────┘
-                       │
-                       ↓ WiFi/Internet
-              ┌─────────────────┐
-              │  FIREBASE       │
-              │  Realtime DB    │
-              └────────┬────────┘
-                       │
-        ┌──────────────┼──────────────┐
-        ↓              ↓              ↓
-┌───────────────┐ ┌──────────┐ ┌──────────────┐
-│  WEB DASHBOARD│ │ ML MODEL │ │ SMS SERVICE  │
-│  Next.js      │ │ XGBoost  │ │ Twilio API   │
-│  + Live Maps  │ │ Predict  │ │ Alerts       │
-└───────────────┘ └──────────┘ └──────────────┘
-        ↓              ↓              ↓
-┌───────────────────────────────────────────┐
-│           END USERS & AUTHORITIES         │
-│  Real-time Data | Predictions | Alerts   │
-└───────────────────────────────────────────┘
-```
-
----
 
 ## Project Architecture
 
@@ -179,13 +131,13 @@ NEXT_PUBLIC_THINGSPEAK_READ_API_KEY=your_key
 1. Clone the repository
 
 ```bash
-git clone https://github.com/balaji2004/Cloud-burst-detection-website.git
+git clone https://github.com/AbhinavPamadi/Cloudburst-Detection-and-Early-Warning-System
 ```
 
 2. Navigate into the project directory
 
 ```bash
-cd Cloud-burst-detection-website
+cd cloudburst-detection
 ```
 
 3. Install dependencies
@@ -197,5 +149,5 @@ npm install
 4. Run the development server
 
 ```bash
-npm start
+npm run dev
 ```
