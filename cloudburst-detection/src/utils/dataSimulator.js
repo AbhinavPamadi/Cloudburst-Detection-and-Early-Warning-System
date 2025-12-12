@@ -50,6 +50,7 @@ export class DataSimulator {
         humidity: sensorData.humidity,
         rainfall: sensorData.rssi !== null ? Math.random() > 0.9 ? +(Math.random() * 5).toFixed(1) : 0 : null,
         rssi: sensorData.rssi,
+        windSpeed: sensorData.windSpeed !== undefined && sensorData.windSpeed !== null ? parseFloat(sensorData.windSpeed) : 0,
         timestamp: sensorData.lastUpdate
       };
 

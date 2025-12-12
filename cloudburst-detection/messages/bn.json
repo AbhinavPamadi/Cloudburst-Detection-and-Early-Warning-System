@@ -167,7 +167,17 @@
     "temperatureUnit": "তাপমাত্রা (°C)",
     "pressureUnit": "চাপ (hPa)",
     "humidityUnit": "আর্দ্রতা (%)",
-    "rssiUnit": "RSSI (dBm)"
+    "rssiUnit": "RSSI (dBm)",
+    "windSpeed": "বাতাসের গতি",
+    "windSpeedOverTime": "সময়ের সাথে বাতাসের গতি",
+    "windSpeedUnit": "কিমি/ঘন্টা"
+  },
+  "windSpeed": {
+    "title": "বাতাসের গতি ইনপুট",
+    "label": "বাতাসের গতি",
+    "unit": "কিমি/ঘন্টা",
+    "submit": "জমা দিন",
+    "submitting": "জমা দেওয়া হচ্ছে..."
   },
   "settings": {
     "title": "সেটিংস",

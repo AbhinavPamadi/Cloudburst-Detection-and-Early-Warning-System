@@ -23,10 +23,12 @@ export const Roles = {
   ADMIN: "ADMIN",
   NODE_REGISTRAR: "NODE_REGISTRAR",
   USER: "USER",
+  SUPER_ADMIN: "SUPER_ADMIN",
 };
 
 const RESERVED_ADMIN_EMAIL = "admin@gmail.com";
 const RESERVED_NODE_EMAIL = "node@gmail.com";
+const RESERVED_SUPER_ADMIN_EMAIL = "super@gmail.com";
 
 /**
  * Creates Firebase Auth user and writes a Firestore user doc.
@@ -37,10 +39,22 @@ export async function registerUser({ email, password, displayName = "" }) {
   const db = getFirestore();
 
   try {
-    // Prevent registering the reserved hardcoded accounts
+    // Prevent registering other reserved accounts, but allow super admin
     if (email === RESERVED_ADMIN_EMAIL || email === RESERVED_NODE_EMAIL) {
       throw new Error("This email is reserved and cannot be registered here.");
     }
+    
+    // Allow super admin registration - check if it already exists first
+    if (email === RESERVED_SUPER_ADMIN_EMAIL) {
+      // Check if super admin already exists
+      const usersCol = collection(db, "users");
+      const q = query(usersCol, where("email", "==", RESERVED_SUPER_ADMIN_EMAIL));
+      const snaps = await getDocs(q);
+      if (!snaps.empty) {
+        throw new Error("Super admin account already exists. Please sign in instead.");
+      }
+    }
+    
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const user = cred.user;
 
@@ -53,12 +67,17 @@ export async function registerUser({ email, password, displayName = "" }) {
       }
     }
 
-    // Firestore user doc with role forced to USER
+    // Assign role: SUPER_ADMIN for super@gmail.com, otherwise USER
+    const assignedRole = email === RESERVED_SUPER_ADMIN_EMAIL 
+      ? Roles.SUPER_ADMIN 
+      : Roles.USER;
+
+    // Firestore user doc with appropriate role
     const userDoc = {
       uid: user.uid,
       email: email,
       displayName: displayName || user.displayName || "",
-      role: Roles.USER,
+      role: assignedRole,
       createdAt: serverTimestamp(),
       lastSeenAt: serverTimestamp(),
     };
@@ -103,20 +122,40 @@ export async function login({ email, password }) {
     const snap = await getDoc(docRef);
     if (snap.exists()) {
       const data = snap.data();
+      // Check if this is the super admin email and assign role accordingly
+      const assignedRole = fbUser.email === RESERVED_SUPER_ADMIN_EMAIL 
+        ? Roles.SUPER_ADMIN 
+        : (data.role || Roles.USER);
+      
+      // Update role if it's super admin but not set correctly
+      if (fbUser.email === RESERVED_SUPER_ADMIN_EMAIL && data.role !== Roles.SUPER_ADMIN) {
+        await updateDoc(doc(db, "users", fbUser.uid), {
+          role: Roles.SUPER_ADMIN,
+        });
+      }
+      
       return {
         uid: fbUser.uid,
         email: data.email || fbUser.email,
         displayName: data.displayName || fbUser.displayName || "",
-        role: data.role || Roles.USER,
+        role: assignedRole,
       };
     }
 
-    // If user doc missing, create default USER doc
+    // If user doc missing, create doc with appropriate role
+    const assignedRole = fbUser.email === RESERVED_SUPER_ADMIN_EMAIL 
+      ? Roles.SUPER_ADMIN 
+      : (fbUser.email === RESERVED_ADMIN_EMAIL 
+        ? Roles.ADMIN 
+        : (fbUser.email === RESERVED_NODE_EMAIL 
+          ? Roles.NODE_REGISTRAR 
+          : Roles.USER));
+    
     const userDoc = {
       uid: fbUser.uid,
       email: fbUser.email,
       displayName: fbUser.displayName || "",
-      role: Roles.USER,
+      role: assignedRole,
       createdAt: serverTimestamp(),
       lastSeenAt: serverTimestamp(),
     };
@@ -175,7 +214,9 @@ export async function getOrCreateOAuthUser({
         photoURL: photoURL || data.photoURL || "",
         role:
           data.role ||
-          (email === RESERVED_ADMIN_EMAIL
+          (email === RESERVED_SUPER_ADMIN_EMAIL
+            ? Roles.SUPER_ADMIN
+            : email === RESERVED_ADMIN_EMAIL
             ? Roles.ADMIN
             : email === RESERVED_NODE_EMAIL
             ? Roles.NODE_REGISTRAR
@@ -184,7 +225,9 @@ export async function getOrCreateOAuthUser({
     }
 
     const assignedRole =
-      email === RESERVED_ADMIN_EMAIL
+      email === RESERVED_SUPER_ADMIN_EMAIL
+        ? Roles.SUPER_ADMIN
+        : email === RESERVED_ADMIN_EMAIL
         ? Roles.ADMIN
         : email === RESERVED_NODE_EMAIL
         ? Roles.NODE_REGISTRAR

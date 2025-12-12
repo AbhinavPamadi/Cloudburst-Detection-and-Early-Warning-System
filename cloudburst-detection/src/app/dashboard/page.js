@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import classNames from "@/utils/classNames";
 import { useTranslations } from "next-intl";
+import WindSpeedInput from "@/components/WindSpeedInput";
+import { useAuth } from "@/features/auth/AuthContext";
 
 const DashboardMap = dynamic(() => import("@/components/DashboardMap"), {
   ssr: false,
@@ -62,11 +64,15 @@ function formatTimeAgo(timestamp) {
 
 export default function DashboardPage() {
   const t = useTranslations("dashboard");
+  const { user } = useAuth();
   const [nodes, setNodes] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [mapExpanded, setMapExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Check if user is super admin
+  const isSuperAdmin = user?.email === "super@gmail.com";
 
   useEffect(() => {
     const nodesRef = ref(database, "nodes");
@@ -363,6 +369,28 @@ export default function DashboardPage() {
     </div>
   );
 
+  const WindSpeedPanel = selectedNode ? (
+    <div className="rounded-2xl bg-white p-4 shadow-lg ring-1 ring-black/5 dark:bg-gray-800/60 dark:ring-black/10">
+      <WindSpeedInput
+        nodeId={selectedNode.id || selectedNode.metadata?.nodeId}
+        onSuccess={(speed) => {
+          console.log("Wind speed saved:", speed);
+        }}
+        onError={(error) => {
+          console.error("Error saving wind speed:", error);
+        }}
+      />
+    </div>
+  ) : (
+    <div className="rounded-2xl bg-white p-4 shadow-lg ring-1 ring-black/5 dark:bg-gray-800/60 dark:ring-black/10">
+      <div className="flex h-full items-center justify-center text-center">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Select a node to input wind speed
+        </p>
+      </div>
+    </div>
+  );
+
   const NetworkStatsPanel = (
     <section
       className="flex h-[320px] flex-col rounded-2xl bg-white p-4 shadow-lg ring-1 ring-black/5 dark:bg-gray-800/60 dark:ring-black/10"
@@ -422,6 +450,13 @@ export default function DashboardPage() {
           <div className="lg:col-span-1">{NetworkStatsPanel}</div>
           <div className="lg:col-span-2">{SensorsPanel}</div>
         </div>
+
+        {/* Wind Speed Input Panel - Only visible to super admin */}
+        {isSuperAdmin && (
+          <div className="mt-6">
+            {WindSpeedPanel}
+          </div>
+        )}
 
         {mapExpanded && (
           <div

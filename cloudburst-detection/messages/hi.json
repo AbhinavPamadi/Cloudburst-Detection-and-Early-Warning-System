@@ -167,7 +167,17 @@
     "temperatureUnit": "तापमान (°C)",
     "pressureUnit": "दबाव (hPa)",
     "humidityUnit": "आर्द्रता (%)",
-    "rssiUnit": "RSSI (dBm)"
+    "rssiUnit": "RSSI (dBm)",
+    "windSpeed": "हवा की गति",
+    "windSpeedOverTime": "समय के साथ हवा की गति",
+    "windSpeedUnit": "किमी/घंटा"
+  },
+  "windSpeed": {
+    "title": "हवा की गति इनपुट",
+    "label": "हवा की गति",
+    "unit": "किमी/घंटा",
+    "submit": "सबमिट करें",
+    "submitting": "सबमिट हो रहा है..."
   },
   "settings": {
     "title": "सेटिंग्स",

@@ -167,7 +167,17 @@
     "temperatureUnit": "ఉష్ణోగ్రత (°C)",
     "pressureUnit": "ఒత్తిడి (hPa)",
     "humidityUnit": "తేమ (%)",
-    "rssiUnit": "RSSI (dBm)"
+    "rssiUnit": "RSSI (dBm)",
+    "windSpeed": "గాలి వేగం",
+    "windSpeedOverTime": "కాలక్రమేణా గాలి వేగం",
+    "windSpeedUnit": "కిమీ/గంట"
+  },
+  "windSpeed": {
+    "title": "గాలి వేగం ఇన్‌పుట్",
+    "label": "గాలి వేగం",
+    "unit": "కిమీ/గంట",
+    "submit": "సమర్పించండి",
+    "submitting": "సమర్పిస్తున్నారు..."
   },
   "settings": {
     "title": "సెట్టింగ్‌లు",

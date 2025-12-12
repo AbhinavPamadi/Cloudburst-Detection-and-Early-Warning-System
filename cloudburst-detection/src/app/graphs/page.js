@@ -69,7 +69,8 @@ function GraphsContent() {
           altitude: values.altitude,
           humidity: values.humidity,
           rainfall: values.rainfall,
-          rssi: values.rssi
+          rssi: values.rssi,
+          windSpeed: values.windSpeed !== undefined && values.windSpeed !== null ? parseFloat(values.windSpeed) : 0
         };
       }).sort((a, b) => a.timestamp - b.timestamp);
 
@@ -94,7 +95,7 @@ function GraphsContent() {
   const handleExportCSV = () => {
     if (historicalData.length === 0) return;
 
-    const headers = ['Timestamp', 'Temperature', 'Pressure', 'Altitude', 'Humidity', 'RSSI'];
+    const headers = ['Timestamp', 'Temperature', 'Pressure', 'Altitude', 'Humidity', 'RSSI', 'Wind Speed'];
     const csvContent = [
       headers.join(','),
       ...historicalData.map(d => [
@@ -103,7 +104,8 @@ function GraphsContent() {
         d.pressure || '',
         d.altitude || '',
         d.humidity || '',
-        d.rssi || ''
+        d.rssi || '',
+        d.windSpeed || ''
       ].join(','))
     ].join('\n');
 
@@ -229,6 +231,18 @@ function GraphsContent() {
               </div>
             </div>
           )}
+
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t("windSpeed")}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {(currentData.windSpeed !== undefined && currentData.windSpeed !== null ? parseFloat(currentData.windSpeed) : 0).toFixed(1)} {t("windSpeedUnit")}
+                </p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+            </div>
+          </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
             <div className="flex items-center justify-between">
@@ -389,6 +403,40 @@ function GraphsContent() {
                 </ResponsiveContainer>
               </div>
             )}
+
+            {/* Wind Speed Chart - Always show since windSpeed defaults to 0 */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t("windSpeedOverTime")}</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={historicalData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="timestamp" 
+                    tickFormatter={(ts) => {
+                      const date = new Date(ts);
+                      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    }}
+                  />
+                  <YAxis />
+                  <Tooltip 
+                    labelFormatter={(ts) => {
+                      const date = new Date(ts);
+                      return date.toLocaleString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false 
+                      });
+                    }}
+                    formatter={(value) => [`${(value || 0)?.toFixed(1)} ${t("windSpeedUnit")}`, t("windSpeed")]}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="windSpeed" stroke="#f59e0b" name={t("windSpeedUnit")} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )}
       </div>

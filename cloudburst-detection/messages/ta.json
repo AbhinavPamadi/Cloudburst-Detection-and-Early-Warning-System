@@ -167,7 +167,17 @@
     "temperatureUnit": "வெப்பநிலை (°C)",
     "pressureUnit": "அழுத்தம் (hPa)",
     "humidityUnit": "ஈரப்பதம் (%)",
-    "rssiUnit": "RSSI (dBm)"
+    "rssiUnit": "RSSI (dBm)",
+    "windSpeed": "காற்றின் வேகம்",
+    "windSpeedOverTime": "காலப்போக்கில் காற்றின் வேகம்",
+    "windSpeedUnit": "கிமீ/மணி"
+  },
+  "windSpeed": {
+    "title": "காற்றின் வேகம் உள்ளீடு",
+    "label": "காற்றின் வேகம்",
+    "unit": "கிமீ/மணி",
+    "submit": "சமர்ப்பிக்கவும்",
+    "submitting": "சமர்ப்பிக்கப்படுகிறது..."
   },
   "settings": {
     "title": "அமைப்புகள்",

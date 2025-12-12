@@ -167,7 +167,17 @@
     "temperatureUnit": "Temperature (°C)",
     "pressureUnit": "Pressure (hPa)",
     "humidityUnit": "Humidity (%)",
-    "rssiUnit": "RSSI (dBm)"
+    "rssiUnit": "RSSI (dBm)",
+    "windSpeed": "Wind Speed",
+    "windSpeedOverTime": "Wind Speed Over Time",
+    "windSpeedUnit": "km/h"
+  },
+  "windSpeed": {
+    "title": "Wind Speed Input",
+    "label": "Wind Speed",
+    "unit": "km/h",
+    "submit": "Submit",
+    "submitting": "Submitting..."
   },
   "settings": {
     "title": "Settings",

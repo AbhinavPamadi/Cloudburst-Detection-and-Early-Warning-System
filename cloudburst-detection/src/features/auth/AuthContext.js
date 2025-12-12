@@ -82,15 +82,29 @@ export function AuthProvider({ children }) {
 
         if (snap.exists()) {
           const data = snap.data();
+          // Check if this is the super admin email and assign role accordingly
+          const assignedRole = fbUser.email === "super@gmail.com" 
+            ? "SUPER_ADMIN" 
+            : (data.role || "USER");
+          
+          // Update role if it's super admin but not set correctly
+          if (fbUser.email === "super@gmail.com" && data.role !== "SUPER_ADMIN") {
+            await setDoc(doc(db, "users", fbUser.uid), {
+              ...data,
+              role: "SUPER_ADMIN",
+              updatedAt: serverTimestamp(),
+            }, { merge: true });
+          }
+          
           const normalized = {
             uid: data.uid || fbUser.uid,
             email: data.email || fbUser.email,
             displayName: data.displayName || fbUser.displayName || "",
             photoURL: data.photoURL || fbUser.photoURL || "",
-            role: data.role || "USER",
+            role: assignedRole,
           };
           setUser(normalized);
-          setRole(normalized.role);
+          setRole(assignedRole);
           setIsAuthenticated(true);
           // persist to localStorage if you want
           if (typeof window !== "undefined") {
@@ -100,13 +114,21 @@ export function AuthProvider({ children }) {
             );
           }
         } else {
-          // if no user doc exists (edge case), create one with default USER role
+          // if no user doc exists (edge case), create one with appropriate role
+          const assignedRole = fbUser.email === "super@gmail.com" 
+            ? "SUPER_ADMIN" 
+            : (fbUser.email === "admin@gmail.com" 
+              ? "ADMIN" 
+              : (fbUser.email === "node@gmail.com" 
+                ? "NODE_REGISTRAR" 
+                : "USER"));
+          
           const userDoc = {
             uid: fbUser.uid,
             email: fbUser.email,
             displayName: fbUser.displayName || "",
             photoURL: fbUser.photoURL || "",
-            role: "USER",
+            role: assignedRole,
             createdAt: serverTimestamp(),
             lastSeenAt: serverTimestamp(),
           };
@@ -116,9 +138,9 @@ export function AuthProvider({ children }) {
             email: fbUser.email,
             displayName: fbUser.displayName || "",
             photoURL: fbUser.photoURL || "",
-            role: "USER",
+            role: assignedRole,
           });
-          setRole("USER");
+          setRole(assignedRole);
           setIsAuthenticated(true);
         }
       } catch (err) {

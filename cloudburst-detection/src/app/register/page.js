@@ -189,6 +189,7 @@ export default function RegisterNode() {
         altitude: altitude || 0,
         humidity: formData.type === 'gateway' ? 0 : null,
         rssi: formData.type === 'gateway' ? null : 0,
+        windSpeed: 0,
         status: 'offline',
         lastUpdate: Math.floor(Date.now() / 1000).toString()  // Unix timestamp in seconds as string
       };
