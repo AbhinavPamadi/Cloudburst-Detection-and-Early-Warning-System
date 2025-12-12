@@ -426,7 +426,7 @@ export default function DashboardPage() {
   /* ---------- Render ---------- */
 
   return (
-    <ProtectedPage allowedRoles={[Roles.ADMIN, Roles.USER]}>
+    <ProtectedPage allowedRoles={[Roles.ADMIN, Roles.SUPER_ADMIN, Roles.USER]}>
       <div className="pt-4 pb-6">
         <header className="mb-6 flex items-center justify-between">
           <div>

@@ -41,6 +41,8 @@ export default function ProtectedPage({
         router.replace('/contacts');
       } else if (role === 'NODE_REGISTRAR') {
         router.replace('/register');
+      } else if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
+        router.replace('/dashboard');
       } else {
         router.replace('/home');
       }

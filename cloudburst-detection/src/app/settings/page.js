@@ -380,7 +380,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <ProtectedPage allowedRoles={[Roles.ADMIN]}>
+      <ProtectedPage allowedRoles={[Roles.ADMIN, Roles.SUPER_ADMIN]}>
         <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
@@ -392,7 +392,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <ProtectedPage allowedRoles={[Roles.ADMIN]}>
+    <ProtectedPage allowedRoles={[Roles.ADMIN, Roles.SUPER_ADMIN]}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       {/* Toast Notifications */}
       {toast && (

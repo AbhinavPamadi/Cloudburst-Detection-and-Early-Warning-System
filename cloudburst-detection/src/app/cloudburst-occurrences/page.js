@@ -201,7 +201,7 @@ export default function CloudburstOccurrencesPage() {
 
   return (
     <ProtectedPage
-      allowedRoles={[Roles.ADMIN, Roles.USER, Roles.NODE_REGISTRAR]}
+      allowedRoles={[Roles.ADMIN, Roles.SUPER_ADMIN, Roles.USER, Roles.NODE_REGISTRAR]}
     >
       <div className="pt-4 pb-6">
         <header className="mb-6 flex items-center justify-between">

@@ -32,7 +32,7 @@ const AdminAnalytics = dynamic(
 export default function DataAnalyticsPage() {
   const t = useTranslations("dataAnalytics");
   return (
-    <ProtectedPage allowedRoles={[Roles.ADMIN, Roles.USER]}>
+    <ProtectedPage allowedRoles={[Roles.ADMIN, Roles.SUPER_ADMIN, Roles.USER]}>
       <div className="px-4 pb-6 pt-4 md:px-6">
         <header className="mb-4 flex items-center gap-2">
           <BarChart2 className="h-5 w-5 text-blue-600" />
