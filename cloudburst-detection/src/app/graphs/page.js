@@ -6,9 +6,10 @@ import { useSearchParams } from 'next/navigation';
 import { database, ref, onValue } from '@/lib/firebase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { formatDateTime } from '@/lib/utils';
-import { TrendingUp, Calendar, Download } from 'lucide-react';
+import { TrendingUp, Calendar, Download, AlertTriangle } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useTranslations } from 'next-intl';
+import { calculateCloudburstProbability, getRiskDescription } from '@/utils/cloudburstPrediction';
 
 // Force dynamic rendering because we use useSearchParams and client-side libraries
 export const dynamic = 'force-dynamic';
@@ -23,6 +24,7 @@ function GraphsContent() {
   const [timeRange, setTimeRange] = useState('24h'); // 1h, 6h, 24h, 7d
   const [historicalData, setHistoricalData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [prediction, setPrediction] = useState(null);
 
   useEffect(() => {
     // Load nodes
@@ -91,6 +93,18 @@ function GraphsContent() {
 
     return () => unsubscribeHistory();
   }, [selectedNode, nodes, timeRange]);
+
+  // Update prediction when current data or historical data changes
+  useEffect(() => {
+    if (!selectedNode || !nodes[selectedNode]) {
+      setPrediction(null);
+      return;
+    }
+
+    const currentData = nodes[selectedNode]?.realtime || {};
+    const predictionResult = calculateCloudburstProbability(currentData, historicalData);
+    setPrediction(predictionResult);
+  }, [selectedNode, nodes, historicalData]);
 
   const handleExportCSV = () => {
     if (historicalData.length === 0) return;
@@ -188,8 +202,41 @@ function GraphsContent() {
           </div>
         </div>
 
-        {/* Current Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        {/* Current Stats with Prediction */}
+        <div className="relative mb-6">
+          {/* Cloudburst Prediction Probability - Top Right */}
+          {prediction && (
+            <div className="absolute top-0 right-0 z-10">
+              <div className={`bg-gradient-to-br ${
+                prediction.riskColor === 'red' ? 'from-red-500 to-red-600' :
+                prediction.riskColor === 'orange' ? 'from-orange-500 to-orange-600' :
+                prediction.riskColor === 'yellow' ? 'from-yellow-500 to-yellow-600' :
+                'from-green-500 to-green-600'
+              } text-white rounded-lg shadow-lg p-4 min-w-[200px]`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  <h3 className="text-sm font-semibold">Cloudburst Prediction</h3>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-1">
+                    {prediction.probability}%
+                  </div>
+                  <div className="text-xs opacity-90 mb-2">
+                    {getRiskDescription(prediction.riskLevel)}
+                  </div>
+                  <div className={`text-xs px-2 py-1 rounded ${
+                    prediction.willOccur 
+                      ? 'bg-red-700/50' 
+                      : 'bg-green-700/50'
+                  }`}>
+                    {prediction.willOccur ? '⚠️ Cloudburst Likely' : '✓ Low Risk'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {currentData.temperature !== undefined && (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
               <div className="flex items-center justify-between">
@@ -254,6 +301,7 @@ function GraphsContent() {
               </div>
               <Calendar className="h-8 w-8 text-orange-600 dark:text-orange-400" />
             </div>
+          </div>
           </div>
         </div>
 
