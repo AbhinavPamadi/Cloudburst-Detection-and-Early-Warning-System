@@ -151,6 +151,8 @@
     "last6Hours": "கடைசி 6 மணி",
     "last24Hours": "கடைசி 24 மணி",
     "last7Days": "கடைசி 7 நாட்கள்",
+    "last2Months": "கடைசி 2 மாதங்கள்",
+    "allTime": "எல்லா நேரமும்",
     "exportCSV": "CSV ஏற்றுமதி",
     "temperature": "வெப்பநிலை",
     "pressure": "அழுத்தம்",

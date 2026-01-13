@@ -151,6 +151,8 @@
     "last6Hours": "शेवटचे 6 तास",
     "last24Hours": "शेवटचे 24 तास",
     "last7Days": "शेवटचे 7 दिवस",
+    "last2Months": "गेल्या 2 महिने",
+    "allTime": "सर्व वेळ",
     "exportCSV": "CSV निर्यात",
     "temperature": "तापमान",
     "pressure": "दाब",

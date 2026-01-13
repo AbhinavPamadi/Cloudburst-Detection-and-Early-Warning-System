@@ -151,6 +151,8 @@
     "last6Hours": "Last 6 Hours",
     "last24Hours": "Last 24 Hours",
     "last7Days": "Last 7 Days",
+    "last2Months": "Last 2 Months",
+    "allTime": "All Time",
     "exportCSV": "Export CSV",
     "temperature": "Temperature",
     "pressure": "Pressure",

@@ -21,7 +21,7 @@ function GraphsContent() {
 
   const [nodes, setNodes] = useState({});
   const [selectedNode, setSelectedNode] = useState(nodeParam || 'gateway');
-  const [timeRange, setTimeRange] = useState('24h'); // 1h, 6h, 24h, 7d
+  const [timeRange, setTimeRange] = useState('24h'); // 1h, 6h, 24h, 7d, 2m, all
   const [historicalData, setHistoricalData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [prediction, setPrediction] = useState(null);
@@ -89,6 +89,8 @@ function GraphsContent() {
         case '6h': cutoff = now - (6 * 60 * 60 * 1000); break;
         case '24h': cutoff = now - (24 * 60 * 60 * 1000); break;
         case '7d': cutoff = now - (7 * 24 * 60 * 60 * 1000); break;
+        case '2m': cutoff = now - (60 * 24 * 60 * 60 * 1000); break; // approx. 60 days
+        case 'all': cutoff = 0; break;
         default: cutoff = now - (24 * 60 * 60 * 1000);
       }
 
@@ -221,6 +223,8 @@ function GraphsContent() {
                 <option value="6h">{t("last6Hours")}</option>
                 <option value="24h">{t("last24Hours")}</option>
                 <option value="7d">{t("last7Days")}</option>
+                <option value="2m">{t("last2Months")}</option>
+                <option value="all">{t("allTime")}</option>
               </select>
             </div>
           </div>

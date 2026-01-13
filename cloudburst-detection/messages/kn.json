@@ -151,6 +151,8 @@
     "last6Hours": "ಕೊನೆಯ 6 ಗಂಟೆಗಳು",
     "last24Hours": "ಕೊನೆಯ 24 ಗಂಟೆಗಳು",
     "last7Days": "ಕೊನೆಯ 7 ದಿನಗಳು",
+    "last2Months": "ಕಳೆದ 2 ತಿಂಗಳುಗಳು",
+    "allTime": "ಎಲ್ಲಾ ಸಮಯ",
     "exportCSV": "CSV ರಫ್ತು",
     "temperature": "ತಾಪಮಾನ",
     "pressure": "ಒತ್ತಡ",

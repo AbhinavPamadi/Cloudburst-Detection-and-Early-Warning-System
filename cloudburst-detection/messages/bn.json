@@ -151,6 +151,8 @@
     "last6Hours": "শেষ 6 ঘন্টা",
     "last24Hours": "শেষ 24 ঘন্টা",
     "last7Days": "শেষ 7 দিন",
+    "last2Months": "শেষ 2 মাস",
+    "allTime": "সমস্ত সময়",
     "exportCSV": "CSV রপ্তানি",
     "temperature": "তাপমাত্রা",
     "pressure": "চাপ",
