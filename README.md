@@ -17,9 +17,84 @@ It leverages **low-cost, solar-powered IoT sensor nodes** connected via a **LoRa
 
 This system provides **hyperlocal weather insights**, **AI-based alerts**, and a **visual dashboard** for monitoring and decision-making — empowering both communities and authorities to respond proactively.
 
-**Live Demo:** [https://cloudburst-detection-and-early-warn.vercel.app]([https://cloud-burst-detection-website.vercel.app/](https://cloudburst-detection-and-early-warn.vercel.app/))  
+**Live Demo:** [cloudburst-detection-and-early-warn.vercel.app/](https://cloudburst-detection-and-early-warn.vercel.app/)  
 **Video Demo:** [Watch on YouTube](https://youtu.be/a9X9CcYgAPU?si=Ea_TAWAwiaaR-COd)
 
+---
+
+## System Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│               CLOUD-BURST EARLY WARNING & ALARM SYSTEM                       │
+│        (Hybrid Stratospheric + Ground + Satellite + AI Architecture)        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+         ┌────────────────────────────────────┐
+         │  STRATOSPHERIC BALLOON PAYLOAD    │
+         │  STM32 MCU                         │
+         │  Sensors:                          │
+         │   • BME680 (Temp, Humidity, Press)│
+         │   • IR Sensor (CTT)                │
+         │   • Tipping Bucket Rain Gauge      │
+         │   • GPS                            │
+         │  Power: Solar + Battery            │
+         │  Storage: Encrypted SD Card        │
+         └───────────────┬────────────────────┘
+                         │
+                         │ LoRa (Payload → Ground)
+                         ▼
+                ┌─────────────────────┐
+                │   GROUND GATEWAY    │
+                │   LoRa Receiver     │
+                │   GPS               │
+                │   Relay + Buzzer    │
+                │   SIM GSM Module    │
+                └───────────┬─────────┘
+                            │
+                            │ GSM / Internet
+                            ▼
+                  ┌───────────────────────┐
+                  │     CLOUD PLATFORM    │
+                  │  Firebase / Cloud DB  │
+                  │  Data Ingestion API   │
+                  └───────────┬───────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+
+┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
+│ SATELLITE DATA   │   │  ML ENGINE       │   │  ADMIN DASHBOARD │
+│ (Macro View)     │──▶│  Hybrid Ensemble │◀──│  Live Monitoring │
+│ CTT, TCWV, CAPE  │   │  XGBoost + RF    │   │  Risk Maps       │
+└──────────────────┘   └─────────┬────────┘   └──────────────────┘
+                                  │
+                                  │ Prediction Output
+                                  ▼
+                       ┌────────────────────────┐
+                       │     ALERT SYSTEM       │
+                       │  Threshold + AI Based  │
+                       │  Yellow / Orange / Red │
+                       └───────────┬────────────┘
+                                   │
+             ┌─────────────────────┼────────────────────┐
+             ▼                     ▼                    ▼
+
+      ┌──────────────┐      ┌──────────────┐     ┌──────────────┐
+      │  SMS Alerts  │      │ Local Siren  │     │ Authorities  │
+      │ (GSM Push)   │      │ + Relay      │     │ Dashboard    │
+      └──────────────┘      └──────────────┘     └──────────────┘
+                                   │
+                                   ▼
+                    ┌──────────────────────────┐
+                    │     END USERS & COMMUNITY│
+                    │  Citizens & Disaster Mgmt│
+                    └──────────────────────────┘
+
+```
+
+---
 
 ## Project Architecture
 
@@ -46,30 +121,30 @@ This system provides **hyperlocal weather insights**, **AI-based alerts**, and a
   | Alert Type | Trigger | Response Time |
   |-------------|----------|----------------|
   | Threshold Alert | Sensor readings cross safe limits | ~10 mins |
-  | AI-based Alert | ML model predicts anomaly | ~24 hrs in advance |
+  | AI-based Alert | ML model predicts anomaly | ~4 hrs in advance |
   | Custom Alert | Admin manual override | Immediate |
 
 ### 4. **Web Application**
 
-- Built with **React + Node.js + Firebase**
+- Built with **Next.js + Firebase**
 - Displays **real-time weather parameters**
 - Visualizes **alert levels, confidence, and safety instructions**
 - Provides **admin control** for sending custom alerts
-- Integrated **SMS and App notifications** for communities
+- Integrated **SMS and Sirens** for communities
 
 ---
 
 ## Tech Stack
 
-| Layer        | Technology             |
-| ------------ | ---------------------- |
-| Frontend     | React.js, Tailwind CSS |
-| Backend      | Node.js, Express.js    |
-| Database     | Firebase / Firestore   |
-| AI Model     | Python (XGBoost)       |
-| IoT Firmware | Arduino IDE (C++)      |
-| Network      | LoRa Mesh              |
-| Deployment   | Vercel                 |
+| Layer    | Technology                      |
+| -------- | ------------------------------- |
+| Sensors  | BME280, Rain Gauge, Wind Sensor |
+| MCU      | Arduino Nano / ESP32            |
+| Network  | LoRa                            |
+| Backend  | Firebase / Cloud DB             |
+| ML       | Python, XGBoost, scikit-learn   |
+| Frontend | Next.js                         |
+| Alerts   | SMS Gateway, Siren, Dashboard   |
 
 ---
 
@@ -103,7 +178,7 @@ This system provides **hyperlocal weather insights**, **AI-based alerts**, and a
 
 ### Prerequisites
 
-- Node.js (v18+)
+- Next.js 
 - npm or yarn
 - Firebase account
 
@@ -124,6 +199,11 @@ NEXT_PUBLIC_FIREBASE_LEGACY_TOKEN=your_key
 # ThingSpeak Configuration
 NEXT_PUBLIC_THINGSPEAK_CHANNEL_ID=your_key
 NEXT_PUBLIC_THINGSPEAK_READ_API_KEY=your_key
+
+# Twilio SMS Configuration
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+TWILIO_PHONE_NUMBER=+1234567890
 ```
 
 ### Steps
