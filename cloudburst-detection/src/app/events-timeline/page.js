@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Calendar, TrendingUp, AlertCircle, Clock } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Calendar, TrendingUp, AlertCircle, Clock, Play, Pause, RotateCcw } from "lucide-react";
 import ProtectedPage from "@/features/auth/ProtectedPage";
 import { Roles } from "@/features/auth/authService";
 import {
@@ -19,11 +18,17 @@ import {
 } from "recharts";
 
 export default function EventsTimelinePage() {
-  const t = useTranslations("eventsTimeline");
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Simulation state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [simulationProgress, setSimulationProgress] = useState(0);
+  const [simulationSpeed, setSimulationSpeed] = useState(1); // 1x, 2x, 4x, etc.
+  const simulationIntervalRef = useRef(null);
+  const [visibleEvents, setVisibleEvents] = useState([]);
 
   useEffect(() => {
     loadEvents();
@@ -230,12 +235,98 @@ export default function EventsTimelinePage() {
 
   const selectedEventData = events.find((e) => e.id === selectedEvent);
 
+  // Reset simulation when event changes
+  useEffect(() => {
+    if (selectedEventData) {
+      setSimulationProgress(0);
+      setIsPlaying(false);
+      setVisibleEvents([]);
+      if (simulationIntervalRef.current) {
+        clearInterval(simulationIntervalRef.current);
+      }
+    }
+  }, [selectedEvent]);
+
+  // Simulation logic
+  useEffect(() => {
+    if (!selectedEventData || !isPlaying) {
+      if (simulationIntervalRef.current) {
+        clearInterval(simulationIntervalRef.current);
+        simulationIntervalRef.current = null;
+      }
+      return;
+    }
+
+    const sortedEvents = [...selectedEventData.allDays].sort((a, b) => a.timestamp - b.timestamp);
+    const totalDuration = sortedEvents.length > 0 
+      ? sortedEvents[sortedEvents.length - 1].timestamp - sortedEvents[0].timestamp
+      : 0;
+    
+    const stepDuration = Math.max(100, 1000 / simulationSpeed); // Adjust speed
+    const progressStep = 100 / sortedEvents.length;
+
+    simulationIntervalRef.current = setInterval(() => {
+      setSimulationProgress((prev) => {
+        const newProgress = prev + progressStep;
+        
+        if (newProgress >= 100) {
+          setIsPlaying(false);
+          setVisibleEvents(sortedEvents);
+          return 100;
+        }
+
+        // Calculate which events should be visible
+        const currentIndex = Math.floor((newProgress / 100) * sortedEvents.length);
+        setVisibleEvents(sortedEvents.slice(0, currentIndex + 1));
+        
+        return newProgress;
+      });
+    }, stepDuration);
+
+    return () => {
+      if (simulationIntervalRef.current) {
+        clearInterval(simulationIntervalRef.current);
+      }
+    };
+  }, [isPlaying, selectedEventData, simulationSpeed]);
+
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      setIsPlaying(false);
+    } else {
+      if (simulationProgress >= 100) {
+        // Restart from beginning
+        setSimulationProgress(0);
+        setVisibleEvents([]);
+      }
+      setIsPlaying(true);
+    }
+  };
+
+  const handleReset = () => {
+    setIsPlaying(false);
+    setSimulationProgress(0);
+    setVisibleEvents([]);
+    if (simulationIntervalRef.current) {
+      clearInterval(simulationIntervalRef.current);
+    }
+  };
+
+  const handleSpeedChange = (speed) => {
+    setSimulationSpeed(speed);
+  };
+
   // Prepare chart data for visualization
   const chartData = useMemo(() => {
     if (!selectedEventData) return [];
 
+    // Use visible events if simulation is active, otherwise show all
+    const dataToUse = visibleEvents.length > 0 && isPlaying 
+      ? visibleEvents 
+      : selectedEventData.allDays;
+    
     // Create data points for each entry (hourly)
-    const sortedData = selectedEventData.allDays.sort((a, b) => a.timestamp - b.timestamp);
+    const sortedData = [...dataToUse].sort((a, b) => a.timestamp - b.timestamp);
     
     return sortedData.map((item, index) => {
       const date = item.date;
@@ -252,9 +343,7 @@ export default function EventsTimelinePage() {
         hour: hour,
       };
     });
-  }, [selectedEventData]);
-
-  const animatedChartData = chartData;
+  }, [selectedEventData, visibleEvents, isPlaying]);
 
   return (
     <ProtectedPage allowedRoles={[Roles.ADMIN, Roles.SUPER_ADMIN, Roles.USER]}>
@@ -357,16 +446,98 @@ export default function EventsTimelinePage() {
                   </div>
                 </div>
 
+                {/* Simulation Controls */}
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg shadow-md p-4 mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                        Timeline Simulation
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Watch events unfold chronologically
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleReset}
+                        className="p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                        title="Reset"
+                      >
+                        <RotateCcw className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={handlePlayPause}
+                        className="p-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
+                      >
+                        {isPlaying ? (
+                          <>
+                            <Pause className="h-5 w-5" />
+                            <span>Pause</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play className="h-5 w-5" />
+                            <span>Play</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Progress
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {Math.round(simulationProgress)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-full transition-all duration-300 ease-out"
+                        style={{ width: `${simulationProgress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Speed Controls */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Speed:
+                    </span>
+                    {[1, 2, 4, 8].map((speed) => (
+                      <button
+                        key={speed}
+                        onClick={() => handleSpeedChange(speed)}
+                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                          simulationSpeed === speed
+                            ? "bg-blue-600 text-white"
+                            : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        }`}
+                      >
+                        {speed}x
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Visual Timeline Chart */}
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     Hour-by-Hour Timeline Visualization
+                    {isPlaying && (
+                      <span className="ml-2 text-sm font-normal text-blue-600 dark:text-blue-400 animate-pulse">
+                        ● Simulating...
+                      </span>
+                    )}
                   </h3>
                   
-                  {animatedChartData.length > 0 && (
+                  {chartData.length > 0 && (
                     <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
                       <ResponsiveContainer width="100%" height={400}>
-                        <ComposedChart data={animatedChartData}>
+                        <ComposedChart data={chartData}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
                           <XAxis
                             dataKey="index"
@@ -426,6 +597,65 @@ export default function EventsTimelinePage() {
                   )}
                 </div>
 
+                {/* Model Performance Metrics */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Model Performance Metrics
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* ROC Curve */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">
+                        ROC Curve
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        Receiver Operating Characteristic curve showing the trade-off between True Positive Rate and False Positive Rate
+                      </p>
+                      <div className="w-full h-auto rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900">
+                        <img
+                          src="/ROC_curve.png"
+                          alt="ROC Curve"
+                          className="w-full h-auto object-contain"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Precision-Recall Curve */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">
+                        Precision-Recall Curve
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        Precision vs Recall curve showing model performance across different thresholds
+                      </p>
+                      <div className="w-full h-auto rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900">
+                        <img
+                          src="/Precision_Recall.png"
+                          alt="Precision Recall Curve"
+                          className="w-full h-auto object-contain"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Probability Distribution */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 lg:col-span-2">
+                      <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">
+                        Probability Distribution
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        Distribution of predicted probabilities showing how the model assigns confidence scores
+                      </p>
+                      <div className="w-full h-auto rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900">
+                        <img
+                          src="/prob_distribution.png"
+                          alt="Probability Distribution"
+                          className="w-full h-auto object-contain max-h-96"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Detailed Timeline List */}
                 <div className="relative">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -436,19 +666,28 @@ export default function EventsTimelinePage() {
                     {selectedEventData.allDays
                       .sort((a, b) => a.timestamp - b.timestamp)
                       .map((day, index) => {
+                        const isVisible = visibleEvents.length === 0 || 
+                          visibleEvents.some(e => e.timestamp === day.timestamp) || 
+                          !isPlaying;
                         const isPrediction = day.label === 1;
                         const isActual = day.label === 2;
                         
                         return (
                           <div
                             key={index}
-                            className={`flex items-center gap-4 p-3 rounded-lg border-2 ${
-                              isActual
+                            className={`flex items-center gap-4 p-3 rounded-lg border-2 transition-all duration-300 ${
+                              !isVisible
+                                ? "opacity-30"
+                                : isActual
                                 ? "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700"
                                 : isPrediction
                                 ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
                                 : "bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
                             }`}
+                            style={{
+                              opacity: isVisible ? 1 : 0.3,
+                              transition: "opacity 0.3s ease-in",
+                            }}
                           >
                             <div className="flex-shrink-0 w-48">
                               <div className="flex items-center gap-2">
